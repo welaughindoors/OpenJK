@@ -1,6 +1,25 @@
-//Anything above this #include will be ignored by the compiler
-#include "qcommon/exe_headers.h"
-// this include must remain at the top of every CPP file
+/*
+===========================================================================
+Copyright (C) 2000 - 2013, Raven Software, Inc.
+Copyright (C) 2001 - 2013, Activision, Inc.
+Copyright (C) 2013 - 2015, OpenJK contributors
+
+This file is part of the OpenJK source code.
+
+OpenJK is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 as
+published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, see <http://www.gnu.org/licenses/>.
+===========================================================================
+*/
+
 #include "client.h"
 #include "FxScheduler.h"
 
@@ -15,7 +34,7 @@
 //	none
 //------------------------------------------------------
 CPrimitiveTemplate::CPrimitiveTemplate()
-{ 
+{
 	// We never start out as a copy or with a name
 	mCopy = false;
 	mName[0] = 0;
@@ -66,7 +85,7 @@ CPrimitiveTemplate::CPrimitiveTemplate()
 }
 
 //-----------------------------------------------------------
-void CPrimitiveTemplate::operator=(const CPrimitiveTemplate &that)
+CPrimitiveTemplate &CPrimitiveTemplate::operator=(const CPrimitiveTemplate &that)
 {
 	// I'm assuming that doing a memcpy wouldn't work here
 	// If you are looking at this and know a better way to do this, please tell me.
@@ -160,12 +179,14 @@ void CPrimitiveTemplate::operator=(const CPrimitiveTemplate &that)
 
 	mSoundRadius		= that.mSoundRadius;
 	mSoundVolume		= that.mSoundVolume;
+
+	return *this;
 }
 
 //------------------------------------------------------
 // ParseFloat
 //	Removes up to two values from a passed in string and
-//	sets these values into the passed in min and max 
+//	sets these values into the passed in min and max
 //	fields.  if no max is present, min is copied into it.
 //
 // input:
@@ -259,7 +280,7 @@ bool CPrimitiveTemplate::ParseGroupFlags( const char *val, int *flags )
 
 	char	flag[][32] = {"\0","\0","\0","0"};
 	bool	ok = true;
-	
+
 	// For a sub group, really you probably only have one or two flags set
 	int v = sscanf( val, "%s %s %s %s", flag[0], flag[1], flag[2], flag[3] );
 
@@ -683,7 +704,7 @@ bool CPrimitiveTemplate::ParseVelocity( const char *val )
 
 //------------------------------------------------------
 // ParseFlags
-//	These are flags that are not specific to a group, 
+//	These are flags that are not specific to a group,
 //	rather, they are specific to the whole primitive.
 //
 // input:
@@ -696,7 +717,7 @@ bool CPrimitiveTemplate::ParseFlags( const char *val )
 {
 	char	flag[][32] = {"\0","\0","\0","\0","\0","\0","\0"};
 	bool	ok = true;
-	
+
 	// For a primitive, really you probably only have two or less flags set
 	int v = sscanf( val, "%s %s %s %s %s %s %s", flag[0], flag[1], flag[2], flag[3], flag[4], flag[5], flag[6] );
 
@@ -754,7 +775,7 @@ bool CPrimitiveTemplate::ParseFlags( const char *val )
 
 //------------------------------------------------------
 // ParseSpawnFlags
-//	These kinds of flags control how things spawn.  They 
+//	These kinds of flags control how things spawn.  They
 //	never get passed on to a primitive.
 //
 // input:
@@ -767,7 +788,7 @@ bool CPrimitiveTemplate::ParseSpawnFlags( const char *val )
 {
 	char	flag[][32] = {"\0","\0","\0","\0","\0","\0","\0"};
 	bool	ok = true;
-	
+
 	// For a primitive, really you probably only have two or less flags set
 	int v = sscanf( val, "%s %s %s %s %s %s %s", flag[0], flag[1], flag[2], flag[3], flag[4], flag[5], flag[6] );
 
@@ -908,7 +929,7 @@ bool CPrimitiveTemplate::ParseDensity( const char *val )
 
 //------------------------------------------------------
 // ParseVariance
-//	Reads in a ranged variance value.  Variance is only 
+//	Reads in a ranged variance value.  Variance is only
 //	valid for emitters that are calling effects...
 //	it basically determines the amount of slop in the
 //	density calculations
@@ -1584,7 +1605,7 @@ bool CPrimitiveTemplate::ParseImpactFxStrings( CGPValue *grp )
 			// name is actually the value contained in the list
 			val = list->GetName();
 			handle = theFxScheduler.RegisterEffect( val );
-	
+
 			if ( handle )
 			{
 				mImpactFxHandles.AddHandle( handle );
@@ -1625,7 +1646,7 @@ bool CPrimitiveTemplate::ParseImpactFxStrings( CGPValue *grp )
 		}
 	}
 
-	mFlags |= FX_IMPACT_RUNS_FX | FX_APPLY_PHYSICS;	
+	mFlags |= FX_IMPACT_RUNS_FX | FX_APPLY_PHYSICS;
 
 	return true;
 }
@@ -1655,7 +1676,7 @@ bool CPrimitiveTemplate::ParseDeathFxStrings( CGPValue *grp )
 			// name is actually the value contained in the list
 			val = list->GetName();
 			handle = theFxScheduler.RegisterEffect( val );
-	
+
 			if ( handle )
 			{
 				mDeathFxHandles.AddHandle( handle );
@@ -1696,7 +1717,7 @@ bool CPrimitiveTemplate::ParseDeathFxStrings( CGPValue *grp )
 		}
 	}
 
-	mFlags |= FX_DEATH_RUNS_FX;	
+	mFlags |= FX_DEATH_RUNS_FX;
 
 	return true;
 }
@@ -1767,7 +1788,7 @@ bool CPrimitiveTemplate::ParseEmitterFxStrings( CGPValue *grp )
 		}
 	}
 
-	mFlags |= FX_EMIT_FX;	
+	mFlags |= FX_EMIT_FX;
 
 	return true;
 }
@@ -1862,7 +1883,7 @@ bool CPrimitiveTemplate::ParseRGB( CGPGroup *grp )
 	pairs = grp->GetPairs();
 
 	while( pairs )
-	{	
+	{
 		// Let's get the key field
 		key = pairs->GetName();
 		val = pairs->GetTopValue();
@@ -1906,7 +1927,7 @@ bool CPrimitiveTemplate::ParseAlpha( CGPGroup *grp )
 	pairs = grp->GetPairs();
 
 	while( pairs )
-	{	
+	{
 		// Let's get the key field
 		key = pairs->GetName();
 		val = pairs->GetTopValue();
@@ -1950,7 +1971,7 @@ bool CPrimitiveTemplate::ParseSize( CGPGroup *grp )
 	pairs = grp->GetPairs();
 
 	while( pairs )
-	{	
+	{
 		// Let's get the key field
 		key = pairs->GetName();
 		val = pairs->GetTopValue();
@@ -1994,7 +2015,7 @@ bool CPrimitiveTemplate::ParseSize2( CGPGroup *grp )
 	pairs = grp->GetPairs();
 
 	while( pairs )
-	{	
+	{
 		// Let's get the key field
 		key = pairs->GetName();
 		val = pairs->GetTopValue();
@@ -2038,7 +2059,7 @@ bool CPrimitiveTemplate::ParseLength( CGPGroup *grp )
 	pairs = grp->GetPairs();
 
 	while( pairs )
-	{	
+	{
 		// Let's get the key field
 		key = pairs->GetName();
 		val = pairs->GetTopValue();
@@ -2061,7 +2082,6 @@ bool CPrimitiveTemplate::ParseLength( CGPGroup *grp )
 	return true;
 }
 
-
 // Parse a primitive, apply defaults first, grab any base level
 //	key pairs, then process any sub groups we may contain.
 //------------------------------------------------------
@@ -2069,7 +2089,7 @@ bool CPrimitiveTemplate::ParsePrimitive( CGPGroup *grp )
 {
 	CGPGroup	*subGrp;
 	CGPValue	*pairs;
-	const char	*key; 
+	const char	*key;
 	const char	*val;
 
 	// Lets work with the pairs first

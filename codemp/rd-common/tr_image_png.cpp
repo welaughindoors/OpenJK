@@ -1,3 +1,27 @@
+/*
+===========================================================================
+Copyright (C) 1999 - 2005, Id Software, Inc.
+Copyright (C) 2000 - 2013, Raven Software, Inc.
+Copyright (C) 2001 - 2013, Activision, Inc.
+Copyright (C) 2005 - 2015, ioquake3 contributors
+Copyright (C) 2013 - 2015, OpenJK contributors
+
+This file is part of the OpenJK source code.
+
+OpenJK is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 as
+published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, see <http://www.gnu.org/licenses/>.
+===========================================================================
+*/
+
 #include "tr_common.h"
 #include <png.h>
 
@@ -166,6 +190,10 @@ struct PNGFileReader
 
 		// Setup reading information, and read header
 		png_set_read_fn (png_ptr, (png_voidp)this, &user_read_data);
+#ifdef PNG_HANDLE_AS_UNKNOWN_SUPPORTED
+		// This generic "ignore all, except required chunks" requires 1.6.0 or newer"
+		png_set_keep_unknown_chunks (png_ptr, PNG_HANDLE_CHUNK_NEVER, NULL, -1);
+#endif
 		png_set_sig_bytes (png_ptr, SIGNATURE_LEN);
 		png_read_info (png_ptr, info_ptr);
 
@@ -218,7 +246,7 @@ struct PNGFileReader
 			ri->Printf (PRINT_ERROR, "Could not allocate enough memory to load the image.");
 
 			ri->Z_Free (tempData);
-			
+
 			return 0;
 		}
 

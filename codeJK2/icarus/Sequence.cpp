@@ -1,20 +1,24 @@
 /*
-This file is part of Jedi Knight 2.
+===========================================================================
+Copyright (C) 2000 - 2013, Raven Software, Inc.
+Copyright (C) 2001 - 2013, Activision, Inc.
+Copyright (C) 2013 - 2015, OpenJK contributors
 
-    Jedi Knight 2 is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+This file is part of the OpenJK source code.
 
-    Jedi Knight 2 is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+OpenJK is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 as
+published by the Free Software Foundation.
 
-    You should have received a copy of the GNU General Public License
-    along with Jedi Knight 2.  If not, see <http://www.gnu.org/licenses/>.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, see <http://www.gnu.org/licenses/>.
+===========================================================================
 */
-// Copyright 2001-2013 Raven Software
 
 // Script Command Sequences
 //
@@ -81,14 +85,14 @@ void CSequence::Delete( void )
 	//Clear all children
 	if ( m_numChildren > 0 )
 	{
-		for ( si = m_children.begin(); si != m_children.end(); si++ )
+		for ( si = m_children.begin(); si != m_children.end(); ++si )
 		{
 			(*si)->SetParent( NULL );
 		}
 	}
 
 	//Clear all held commands
-	for ( bi = m_commands.begin(); bi != m_commands.end(); bi++ )
+	for ( bi = m_commands.begin(); bi != m_commands.end(); ++bi )
 	{
 		delete (*bi);	//Free() handled internally
 	}
@@ -142,7 +146,7 @@ bool CSequence::HasChild( CSequence *sequence )
 {
 	sequence_l::iterator	ci;
 
-	for ( ci = m_children.begin(); ci != m_children.end(); ci++ )
+	for ( ci = m_children.begin(); ci != m_children.end(); ++ci )
 	{
 		if ( (*ci) == sequence )
 			return true;
@@ -276,7 +280,7 @@ void CSequence::RemoveFlag( int flag, bool children )
 	{
 		sequence_l::iterator	si;
 
-		for ( si = m_children.begin(); si != m_children.end(); si++ )
+		for ( si = m_children.begin(); si != m_children.end(); ++si )
 		{
 			(*si)->RemoveFlag( flag, true );
 		}
@@ -340,15 +344,15 @@ int CSequence::SaveCommand( CBlock *block )
 	
 	//Save out the block ID
 	bID = block->GetBlockID();
-	(m_owner->GetInterface())->I_WriteSaveData( 'BLID', &bID, sizeof ( bID ) );
+	(m_owner->GetInterface())->I_WriteSaveData( INT_ID('B','L','I','D'), &bID, sizeof ( bID ) );
 
 	//Save out the block's flags
 	flags = block->GetFlags();
-	(m_owner->GetInterface())->I_WriteSaveData( 'BFLG', &flags, sizeof ( flags ) );
+	(m_owner->GetInterface())->I_WriteSaveData( INT_ID('B','F','L','G'), &flags, sizeof ( flags ) );
 
 	//Save out the number of members to read
 	numMembers = block->GetNumMembers();
-	(m_owner->GetInterface())->I_WriteSaveData( 'BNUM', &numMembers, sizeof ( numMembers ) );
+	(m_owner->GetInterface())->I_WriteSaveData( INT_ID('B','N','U','M'), &numMembers, sizeof ( numMembers ) );
 
 	for ( int i = 0; i < numMembers; i++ )
 	{
@@ -356,14 +360,14 @@ int CSequence::SaveCommand( CBlock *block )
 
 		//Save the block id
 		bID = bm->GetID();
-		(m_owner->GetInterface())->I_WriteSaveData( 'BMID', &bID, sizeof ( bID ) );
+		(m_owner->GetInterface())->I_WriteSaveData( INT_ID('B','M','I','D'), &bID, sizeof ( bID ) );
 		
 		//Save out the data size
 		size = bm->GetSize();
-		(m_owner->GetInterface())->I_WriteSaveData( 'BSIZ', &size, sizeof( size ) );
+		(m_owner->GetInterface())->I_WriteSaveData( INT_ID('B','S','I','Z'), &size, sizeof( size ) );
 		
 		//Save out the raw data
-		(m_owner->GetInterface())->I_WriteSaveData( 'BMEM', bm->GetData(), size );
+		(m_owner->GetInterface())->I_WriteSaveData( INT_ID('B','M','E','M'), bm->GetData(), size );
 	}
 
 	return true;
@@ -383,30 +387,30 @@ int CSequence::Save( void )
 
 	//Save the parent (by GUID)
 	id = ( m_parent != NULL ) ? m_parent->GetID() : -1;
-	(m_owner->GetInterface())->I_WriteSaveData( 'SPID', &id, sizeof( id ) );
+	(m_owner->GetInterface())->I_WriteSaveData( INT_ID('S','P','I','D'), &id, sizeof( id ) );
 
 	//Save the return (by GUID)
 	id = ( m_return != NULL ) ? m_return->GetID() : -1;
-	(m_owner->GetInterface())->I_WriteSaveData( 'SRID', &id, sizeof( id ) );
+	(m_owner->GetInterface())->I_WriteSaveData( INT_ID('S','R','I','D'), &id, sizeof( id ) );
 	
 	//Save the number of children
-	(m_owner->GetInterface())->I_WriteSaveData( 'SNCH', &m_numChildren, sizeof( m_numChildren ) );
+	(m_owner->GetInterface())->I_WriteSaveData( INT_ID('S','N','C','H'), &m_numChildren, sizeof( m_numChildren ) );
 
 	//Save out the children (only by GUID)
 	STL_ITERATE( ci, m_children )
 	{
 		id = (*ci)->GetID();
-		(m_owner->GetInterface())->I_WriteSaveData( 'SCHD', &id, sizeof( id ) );
+		(m_owner->GetInterface())->I_WriteSaveData( INT_ID('S','C','H','D'), &id, sizeof( id ) );
 	}
 
 	//Save flags
-	(m_owner->GetInterface())->I_WriteSaveData( 'SFLG', &m_flags, sizeof( m_flags ) );
+	(m_owner->GetInterface())->I_WriteSaveData( INT_ID('S','F','L','G'), &m_flags, sizeof( m_flags ) );
 
 	//Save iterations
-	(m_owner->GetInterface())->I_WriteSaveData( 'SITR', &m_iterations, sizeof( m_iterations ) );
+	(m_owner->GetInterface())->I_WriteSaveData( INT_ID('S','I','T','R'), &m_iterations, sizeof( m_iterations ) );
 
 	//Save the number of commands
-	(m_owner->GetInterface())->I_WriteSaveData( 'SNMC', &m_numCommands, sizeof( m_numCommands ) );
+	(m_owner->GetInterface())->I_WriteSaveData( INT_ID('S','N','M','C'), &m_numCommands, sizeof( m_numCommands ) );
 
 	//Save the commands
 	STL_ITERATE( bi, m_commands )
@@ -435,21 +439,21 @@ int CSequence::Load( void )
 	void			*bData;
 
 	//Get the parent sequence
-	(m_owner->GetInterface())->I_ReadSaveData( 'SPID', &id, sizeof( id ), NULL );
+	(m_owner->GetInterface())->I_ReadSaveData( INT_ID('S','P','I','D'), &id, sizeof( id ), NULL );
 	m_parent = ( id != -1 ) ? m_owner->GetSequence( id ) : NULL;
 	
 	//Get the return sequence
-	(m_owner->GetInterface())->I_ReadSaveData( 'SRID', &id, sizeof( id ), NULL );
+	(m_owner->GetInterface())->I_ReadSaveData( INT_ID('S','R','I','D'), &id, sizeof( id ), NULL );
 	m_return = ( id != -1 ) ? m_owner->GetSequence( id ) : NULL;
 
 	//Get the number of children
-	(m_owner->GetInterface())->I_ReadSaveData( 'SNCH', &m_numChildren, sizeof( m_numChildren ), NULL );
+	(m_owner->GetInterface())->I_ReadSaveData( INT_ID('S','N','C','H'), &m_numChildren, sizeof( m_numChildren ), NULL );
 
 	//Reload all children
 	for ( i = 0; i < m_numChildren; i++ )
 	{
 		//Get the child sequence ID
-		(m_owner->GetInterface())->I_ReadSaveData( 'SCHD', &id, sizeof( id ), NULL );
+		(m_owner->GetInterface())->I_ReadSaveData( INT_ID('S','C','H','D'), &id, sizeof( id ), NULL );
 
 		//Get the desired sequence
 		if ( ( sequence = m_owner->GetSequence( id ) ) == NULL )
@@ -464,46 +468,46 @@ int CSequence::Load( void )
 
 	
 	//Get the sequence flags
-	(m_owner->GetInterface())->I_ReadSaveData( 'SFLG', &m_flags, sizeof( m_flags ), NULL );
+	(m_owner->GetInterface())->I_ReadSaveData( INT_ID('S','F','L','G'), &m_flags, sizeof( m_flags ), NULL );
 
 	//Get the number of iterations
-	(m_owner->GetInterface())->I_ReadSaveData( 'SITR', &m_iterations, sizeof( m_iterations ), NULL );
+	(m_owner->GetInterface())->I_ReadSaveData( INT_ID('S','I','T','R'), &m_iterations, sizeof( m_iterations ), NULL );
 
 	int	numCommands;
 
 	//Get the number of commands
-	(m_owner->GetInterface())->I_ReadSaveData( 'SNMC', &numCommands, sizeof( m_numCommands ), NULL );
+	(m_owner->GetInterface())->I_ReadSaveData( INT_ID('S','N','M','C'), &numCommands, sizeof( m_numCommands ), NULL );
 
 	//Get all the commands
 	for ( i = 0; i < numCommands; i++ )
 	{
 		//Get the block ID and create a new container
-		(m_owner->GetInterface())->I_ReadSaveData( 'BLID', &id, sizeof( id ), NULL );
+		(m_owner->GetInterface())->I_ReadSaveData( INT_ID('B','L','I','D'), &id, sizeof( id ), NULL );
 		block = new CBlock;
 		
 		block->Create( id );
 		
 		//Read the block's flags
-		(m_owner->GetInterface())->I_ReadSaveData( 'BFLG', &flags, sizeof( flags ), NULL );
+		(m_owner->GetInterface())->I_ReadSaveData( INT_ID('B','F','L','G'), &flags, sizeof( flags ), NULL );
 		block->SetFlags( flags );
 
 		//Get the number of block members
-		(m_owner->GetInterface())->I_ReadSaveData( 'BNUM', &numMembers, sizeof( numMembers ), NULL );
+		(m_owner->GetInterface())->I_ReadSaveData( INT_ID('B','N','U','M'), &numMembers, sizeof( numMembers ), NULL );
 		
 		for ( int j = 0; j < numMembers; j++ )
 		{
 			//Get the member ID
-			(m_owner->GetInterface())->I_ReadSaveData( 'BMID', &bID, sizeof( bID ), NULL );
+			(m_owner->GetInterface())->I_ReadSaveData( INT_ID('B','M','I','D'), &bID, sizeof( bID ), NULL );
 			
 			//Get the member size
-			(m_owner->GetInterface())->I_ReadSaveData( 'BSIZ', &bSize, sizeof( bSize ), NULL );
+			(m_owner->GetInterface())->I_ReadSaveData( INT_ID('B','S','I','Z'), &bSize, sizeof( bSize ), NULL );
 
 			//Get the member's data
 			if ( ( bData = ICARUS_Malloc( bSize ) ) == NULL )
 				return false;
 
 			//Get the actual raw data
-			(m_owner->GetInterface())->I_ReadSaveData( 'BMEM', bData, bSize, NULL );
+			(m_owner->GetInterface())->I_ReadSaveData( INT_ID('B','M','E','M'), bData, bSize, NULL );
 
 			//Write out the correct type
 			switch ( bID )

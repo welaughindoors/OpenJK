@@ -2,9 +2,8 @@
 This file is part of Jedi Academy.
 
     Jedi Academy is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+    it under the terms of the GNU General Public License version 2
+    as published by the Free Software Foundation.
 
     Jedi Academy is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -32,10 +31,6 @@ This file is part of Jedi Academy.
 #define DIRECTINPUT_VERSION 0x0800 //[ 0x0300 | 0x0500 | 0x0700 | 0x0800 ]
 #include <dinput.h>
 #include <dsound.h>
-
-#ifndef NO_XINPUT
-#include <Xinput.h>
-#endif
 
 void	IN_MouseEvent (int mstate);
 void	IN_RawMouseEvent( int lastX, int lastY ); // Send raw input events to the input subsystem

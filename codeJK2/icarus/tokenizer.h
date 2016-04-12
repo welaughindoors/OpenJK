@@ -1,46 +1,34 @@
 /*
-This file is part of Jedi Knight 2.
+===========================================================================
+Copyright (C) 2000 - 2013, Raven Software, Inc.
+Copyright (C) 2001 - 2013, Activision, Inc.
+Copyright (C) 2013 - 2015, OpenJK contributors
 
-    Jedi Knight 2 is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+This file is part of the OpenJK source code.
 
-    Jedi Knight 2 is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+OpenJK is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 as
+published by the Free Software Foundation.
 
-    You should have received a copy of the GNU General Public License
-    along with Jedi Knight 2.  If not, see <http://www.gnu.org/licenses/>.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, see <http://www.gnu.org/licenses/>.
+===========================================================================
 */
-// Copyright 2001-2013 Raven Software
 
 // Tokenizer.h
-//
 
 #ifndef __TOKENIZER_H
 #define __TOKENIZER_H
 
-#pragma warning( disable : 4786 )	// identifier was truncated 
-
-#pragma warning (push, 3)			// go back down to 3 for the stl include
-#pragma warning (disable:4503)		// decorated name length xceeded, name was truncated
 #include <string>
+#include <string.h>
 #include <vector>
 #include <map>
-#pragma warning (pop)
-#pragma warning (disable:4503)		// decorated name length xceeded, name was truncated
-
-using namespace std;
-
-#include "../../tools/Ibize/ibize_platform.h"
-
-#ifndef _WIN32
-#include <string.h>
-#endif
-
-//#include <windows.h>
 
 typedef unsigned char byte;
 typedef unsigned short word;
@@ -127,7 +115,7 @@ public:
 	virtual bool IsThisDefinition(void* theDefinition);
 
 protected:
-	virtual bool Init();
+	bool InitBaseStream();
 
 	CParseStream*		m_next;
 };
@@ -148,7 +136,7 @@ public:
 	virtual float GetFloatValue();
 
 protected:
-	virtual void Init();
+	virtual void InitBaseToken();
 
 	char*			m_string;
 	CToken*			m_next;
@@ -165,7 +153,7 @@ public:
 	virtual int GetType();
 
 protected:
-	virtual void Init(byte theByte);
+	void Init(byte theByte);
 };
 
 class CStringToken : public CToken
@@ -179,7 +167,7 @@ public:
 	virtual int GetType();
 
 protected:
-	virtual void Init(const char *theString);
+	void Init(const char *theString);
 };
 
 class CIntToken : public CToken
@@ -196,7 +184,7 @@ public:
 	virtual const char *GetStringValue();
 
 protected:
-	virtual void Init(long value);
+	void Init(long value);
 	
 	long			m_value;
 };
@@ -230,7 +218,7 @@ public:
 	virtual int GetType();
 
 protected:
-	virtual void Init(const char *name);
+	void Init(const char *name);
 };
 
 class CCommentToken : public CToken
@@ -244,7 +232,7 @@ public:
 	virtual int GetType();
 
 protected:
-	virtual void Init(const char *name);
+	void Init(const char *name);
 };
 
 class CUserToken : public CToken
@@ -258,7 +246,7 @@ public:
 	virtual int GetType();
 
 protected:
-	virtual void Init(int value, const char *string);
+	void Init(int value, const char *string);
 
 	int				m_value;
 };
@@ -274,7 +262,7 @@ public:
 	virtual int GetType();
 
 protected:
-	virtual void Init(const char *string);
+	void Init(const char *string);
 };
 
 class CSymbol
@@ -288,12 +276,12 @@ public:
 	const char *GetName();
 
 protected:
-	virtual void Init(const char *symbolName);
+	void Init(const char *symbolName);
 
 	char*			m_symbolName;
 };
 
-typedef map<const char *, CSymbol*, lessstr> symbolmap_t;
+typedef std::map<const char *, CSymbol*, lessstr> symbolmap_t;
 
 class CDirectiveSymbol : public CSymbol
 {
@@ -307,7 +295,7 @@ public:
 	const char *GetValue();
 
 protected:
-	virtual void Init(const char *symbolName);
+	void Init(const char *symbolName);
 
 	char*			m_value;
 };
@@ -322,7 +310,7 @@ public:
 	int GetValue();
 
 protected:
-	virtual void Init(const char *symbolName, int value);
+	void Init(const char *symbolName, int value);
 
 	int				m_value;
 };
@@ -437,7 +425,7 @@ public:
 	void SetErrorProc(LPTokenizerErrorProc errorProc);
 	void AddParseStream(byte* data, long datasize);
 	bool AddParseFile(const char *filename);
-	COLORREF ParseRGB();
+	unsigned int ParseRGB();
 	long GetRemainingSize();
 
 	unsigned GetFlags();
@@ -510,7 +498,7 @@ public:
 	virtual long GetRemainingSize();
 
 protected:
-	virtual void Init(byte theByte, int curLine, const char *filename);
+	void Init(byte theByte, int curLine, const char *filename);
 
 	byte			m_byte;
 	bool			m_consumed;
@@ -531,7 +519,7 @@ public:
 	virtual long GetRemainingSize();
 
 protected:
-	virtual void Init(byte* data, long datasize);
+	void Init(byte* data, long datasize);
 
 	byte*			m_data;
 	int				m_curLine;
@@ -565,7 +553,7 @@ public:
 	virtual long GetRemainingSize();
 
 protected:
-	virtual void Init(CToken* token);
+	void Init(CToken* token);
 
 	byte*			m_data;
 	int				m_curLine;
@@ -588,39 +576,5 @@ protected:
 
 	CDirectiveSymbol*			m_defineSymbol;
 };
-
-class CParseFile : public CParseStream
-{
-public:
-	CParseFile();
-	~CParseFile();
-	static CParseFile* Create();
-	static CParseFile* Create(const char *filename, CTokenizer* tokenizer);
-//	static CParseFile* Create(CFile* file, CTokenizer* tokenizer);
-	virtual void Delete();
-	virtual int GetCurLine();
-	virtual void GetCurFilename(char** theBuff);
-	virtual long GetRemainingSize();
-
-	virtual bool NextChar(byte& theByte);
-
-protected:
-	virtual bool Init();
-	virtual bool Init(const char *filename, CTokenizer* tokenizer);
-//	virtual void Init(CFile* file, CTokenizer* tokenizer);
-	DWORD GetFileSize();
-	void Read(void* buff, unsigned buffsize);
-
-//	CFile*			m_file;
-	HANDLE			m_fileHandle;
-	char*			m_fileName;
-	int				m_curLine;
-	int				m_curPos;
-	byte*			m_buff;
-	DWORD			m_curByte;
-	DWORD			m_filesize;
-	bool			m_ownsFile;
-};
-
 
 #endif//__TOKENIZER_H

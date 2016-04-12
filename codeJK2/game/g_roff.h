@@ -1,20 +1,24 @@
 /*
-This file is part of Jedi Knight 2.
+===========================================================================
+Copyright (C) 2000 - 2013, Raven Software, Inc.
+Copyright (C) 2001 - 2013, Activision, Inc.
+Copyright (C) 2013 - 2015, OpenJK contributors
 
-    Jedi Knight 2 is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+This file is part of the OpenJK source code.
 
-    Jedi Knight 2 is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+OpenJK is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 as
+published by the Free Software Foundation.
 
-    You should have received a copy of the GNU General Public License
-    along with Jedi Knight 2.  If not, see <http://www.gnu.org/licenses/>.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, see <http://www.gnu.org/licenses/>.
+===========================================================================
 */
-// Copyright 2001-2013 Raven Software
 
 #ifndef __G_ROFF_H__
 #define __G_ROFF_H__
@@ -27,7 +31,7 @@ This file is part of Jedi Knight 2.
 //-------------------
 #define ROFF_VERSION		1	// ver # for the (R)otation (O)bject (F)ile (F)ormat
 #define ROFF_VERSION2		2	// ver # for the (R)otation (O)bject (F)ile (F)ormat
-#define MAX_ROFFS			32	// hard coded number of max roffs per level, sigh..
+#define MAX_ROFFS			128	// hard coded number of max roffs per level, sigh..
 #define ROFF_SAMPLE_RATE	20	// 10hz
 
 
@@ -36,7 +40,7 @@ This file is part of Jedi Knight 2.
 typedef struct roff_hdr_s
 {
 	char	mHeader[4];		// should be "ROFF" (Rotation, Origin File Format)
-	long	mVersion;	
+	int	mVersion;	
 	float	mCount;			// There isn't any reason for this to be anything other than an int, sigh...
 		//						
 		//		Move - Rotate data follows....vec3_t delta_origin, vec3_t delta_rotation
@@ -57,7 +61,7 @@ typedef struct roff_hdr2_s
 //-------------------------------
 {
 	char	mHeader[4];				// should match roff_string defined above
-	long	mVersion;				// version num, supported version defined above
+	int	mVersion;				// version num, supported version defined above
 	int		mCount;					// I think this is a float because of a limitation of the roff exporter
 	int		mFrameRate;				// Frame rate the roff should be played at
 	int		mNumNotes;				// number of notes (null terminated strings) after the roff data
@@ -103,4 +107,4 @@ void	G_Roff( gentity_t *ent );
 void	G_SaveCachedRoffs();
 void	G_LoadCachedRoffs();
 
-#endif`
+#endif
