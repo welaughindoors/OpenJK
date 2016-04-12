@@ -1,3 +1,24 @@
+/*
+===========================================================================
+Copyright (C) 2000 - 2013, Raven Software, Inc.
+Copyright (C) 2001 - 2013, Activision, Inc.
+Copyright (C) 2013 - 2015, OpenJK contributors
+
+This file is part of the OpenJK source code.
+
+OpenJK is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 as
+published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, see <http://www.gnu.org/licenses/>.
+===========================================================================
+*/
 
 #ifdef _GAME //including game headers on cgame is FORBIDDEN ^_^
 	#include "g_local.h"
@@ -11,7 +32,6 @@ extern float DotToSpot( vec3_t spot, vec3_t from, vec3_t fromAngles );
 extern vec3_t playerMins;
 extern vec3_t playerMaxs;
 
-extern void PM_SetAnim(pmove_t	*pm,int setAnimParts,int anim,int setAnimFlags, int blendTime);
 extern int PM_AnimLength( int index, animNumber_t anim );
 
 extern void Vehicle_SetAnim(gentity_t *ent,int setAnimParts,int anim,int setAnimFlags, int iBlend);
@@ -148,7 +168,7 @@ static void ProcessMoveCommands( Vehicle_t *pVeh )
 
 	if ( parentPS->speed || parentPS->groundEntityNum == ENTITYNUM_NONE  ||
 		 pVeh->m_ucmd.forwardmove || pVeh->m_ucmd.upmove > 0 )
-	{ 
+	{
 		if ( pVeh->m_ucmd.forwardmove > 0 && speedInc )
 		{
 			parentPS->speed += speedInc;
@@ -195,7 +215,7 @@ static void ProcessMoveCommands( Vehicle_t *pVeh )
 
 		//pVeh->m_ucmd.rightmove = 0;
 
-		/*if ( !pVeh->m_pVehicleInfo->strafePerc 
+		/*if ( !pVeh->m_pVehicleInfo->strafePerc
 			|| (!g_speederControlScheme->value && !parent->s.number) )
 		{//if in a strafe-capable vehicle, clear strafing unless using alternate control scheme
 			pVeh->m_ucmd.rightmove = 0;
@@ -235,7 +255,7 @@ static void ProcessOrientCommands( Vehicle_t *pVeh )
 	/********************************************************************************/
 	bgEntity_t *parent = pVeh->m_pParentEntity;
 	playerState_t *parentPS, *riderPS;
-	
+
 	bgEntity_t *rider = NULL;
 	if (parent->s.owner != ENTITYNUM_NONE)
 	{
@@ -250,11 +270,12 @@ static void ProcessOrientCommands( Vehicle_t *pVeh )
 
 
 	parentPS = parent->playerState;
-	riderPS = rider->playerState;
 
 	if (rider)
 	{
-		float angDif = AngleSubtract(pVeh->m_vOrientation[YAW], riderPS->viewangles[YAW]);
+		float angDif;
+		riderPS = rider->playerState;
+		angDif = AngleSubtract(pVeh->m_vOrientation[YAW], riderPS->viewangles[YAW]);
 		if (parentPS && parentPS->speed)
 		{
 			float s = parentPS->speed;
@@ -287,7 +308,7 @@ static void ProcessOrientCommands( Vehicle_t *pVeh )
 	else
 	{
 		float turnSpeed = pVeh->m_pVehicleInfo->turningSpeed;
-		if ( !pVeh->m_pVehicleInfo->turnWhenStopped 
+		if ( !pVeh->m_pVehicleInfo->turnWhenStopped
 			&& !parentPS->speed )//FIXME: or !pVeh->m_ucmd.forwardmove?
 		{//can't turn when not moving
 			//FIXME: or ramp up to max turnSpeed?
@@ -331,20 +352,20 @@ void AnimalProcessOri(Vehicle_t *pVeh)
 #ifdef _GAME //back to our game-only functions
 static void AnimateVehicle( Vehicle_t *pVeh )
 {
-	animNumber_t	Anim = BOTH_VT_IDLE; 
+	animNumber_t	Anim = BOTH_VT_IDLE;
 	int				iFlags = SETANIM_FLAG_NORMAL, iBlend = 300;
 	gentity_t *		pilot = (gentity_t *)pVeh->m_pPilot;
 	gentity_t *		parent = (gentity_t *)pVeh->m_pParentEntity;
 	float			fSpeedPercToMax;
 
 	// We're dead (boarding is reused here so I don't have to make another variable :-).
-	if ( parent->health <= 0 ) 
+	if ( parent->health <= 0 )
 	{
 		/*
 		if ( pVeh->m_iBoarding != -999 )	// Animate the death just once!
 		{
 			pVeh->m_iBoarding = -999;
-			iFlags = SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD; 
+			iFlags = SETANIM_FLAG_OVERRIDE | SETANIM_FLAG_HOLD;
 
 			// FIXME! Why do you keep repeating over and over!!?!?!? Bastard!
 			//Vehicle_SetAnim( parent, SETANIM_LEGS, BOTH_VT_DEATH1, iFlags, iBlend );
@@ -422,7 +443,7 @@ static void AnimateVehicle( Vehicle_t *pVeh )
 
 	// Percentage of maximum speed relative to current speed.
 	//float fSpeed = VectorLength( client->ps.velocity );
-	fSpeedPercToMax = parent->client->ps.speed / pVeh->m_pVehicleInfo->speedMax; 
+	fSpeedPercToMax = parent->client->ps.speed / pVeh->m_pVehicleInfo->speedMax;
 
 
 	// Going in reverse...
@@ -532,7 +553,7 @@ static void AnimateRiders( Vehicle_t *pVeh )
 			}
 			WeaponPose = (pVeh->m_ulFlags&VEH_SABERINLEFTHAND)?(WPOSE_SABERLEFT):(WPOSE_SABERRIGHT);
 		}
-		
+
 
  		if (Attacking && WeaponPose)
 		{// Attack!

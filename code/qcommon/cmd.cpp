@@ -1,20 +1,27 @@
 /*
-This file is part of Jedi Academy.
+===========================================================================
+Copyright (C) 1999 - 2005, Id Software, Inc.
+Copyright (C) 2000 - 2013, Raven Software, Inc.
+Copyright (C) 2001 - 2013, Activision, Inc.
+Copyright (C) 2005 - 2015, ioquake3 contributors
+Copyright (C) 2013 - 2015, OpenJK contributors
 
-    Jedi Academy is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+This file is part of the OpenJK source code.
 
-    Jedi Academy is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+OpenJK is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 as
+published by the Free Software Foundation.
 
-    You should have received a copy of the GNU General Public License
-    along with Jedi Academy.  If not, see <http://www.gnu.org/licenses/>.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, see <http://www.gnu.org/licenses/>.
+===========================================================================
 */
-// Copyright 2001-2013 Raven Software
+
 // cmd.c -- Quake script command processing module
 
 #include "q_shared.h"
@@ -23,7 +30,7 @@ This file is part of Jedi Academy.
 #define	MAX_CMD_BUFFER	128*1024
 #define	MAX_CMD_LINE	1024
 
-typedef struct {
+typedef struct cmd_s {
 	byte	*data;
 	int		maxsize;
 	int		cursize;
@@ -84,7 +91,7 @@ Adds command text at the end of the buffer, does NOT add a final \n
 */
 void Cbuf_AddText( const char *text ) {
 	int		l;
-	
+
 	l = strlen (text);
 
 	if (cmd_text.cursize + l >= cmd_text.maxsize)
@@ -168,7 +175,7 @@ void Cbuf_Execute (void)
 {
 	int		i;
 	char	*text;
-	char	line[MAX_CMD_BUFFER];
+	char	line[MAX_CMD_LINE];
 	int		quotes;
 
 	// This will keep // style comments all on one line by not breaking on
@@ -179,7 +186,7 @@ void Cbuf_Execute (void)
 
 	while (cmd_text.cursize)
 	{
-		if ( cmd_wait > 0 )	{
+		if ( cmd_wait > 0 ) {
 			// skip out while text still remains in buffer, leaving it
 			// for next frame
 			cmd_wait--;
@@ -222,10 +229,10 @@ void Cbuf_Execute (void)
 		if( i >= (MAX_CMD_LINE - 1)) {
 			i = MAX_CMD_LINE - 1;
 		}
-				
+
 		Com_Memcpy (line, text, i);
 		line[i] = 0;
-		
+
 // delete the text from the command buffer and move remaining commands down
 // this is necessary because commands (exec) can insert data at the
 // beginning of the text buffer
@@ -241,7 +248,7 @@ void Cbuf_Execute (void)
 
 // execute the command line
 
-		Cmd_ExecuteString (line);		
+		Cmd_ExecuteString (line);
 	}
 }
 
@@ -285,7 +292,7 @@ void Cmd_Exec_f( void ) {
 	}
 	if (!quiet)
 		Com_Printf ("execing %s\n", filename);
-	
+
 	Cbuf_InsertText (f.c);
 
 	FS_FreeFile (f.v);
@@ -378,10 +385,10 @@ Cmd_Argv
 ============
 */
 char	*Cmd_Argv( int arg ) {
-	if ( (unsigned)arg >= (unsigned)cmd_argc ) {
+	if ( (unsigned)arg >= (unsigned)cmd_argc )
 		return "";
-	}
-	return cmd_argv[arg];	
+
+	return cmd_argv[arg];
 }
 
 /*
@@ -396,23 +403,24 @@ void	Cmd_ArgvBuffer( int arg, char *buffer, int bufferLength ) {
 	Q_strncpyz( buffer, Cmd_Argv( arg ), bufferLength );
 }
 
-
 /*
 ============
-Cmd_Args
+Cmd_ArgsFrom
 
-Returns a single string containing argv(1) to argv(argc()-1)
+Returns a single string containing argv(arg) to argv(argc()-1)
 ============
 */
-char	*Cmd_Args( void ) {
-	static	char		cmd_args[MAX_STRING_CHARS];
+char *Cmd_ArgsFrom( int arg ) {
+	static	char	cmd_args[BIG_INFO_STRING];
 	int		i;
 
-	cmd_args[0] = 0;
-	for ( i = 1 ; i < cmd_argc ; i++ ) {
-		strcat( cmd_args, cmd_argv[i] );
+	cmd_args[0] = '\0';
+	if (arg < 0)
+		arg = 0;
+	for ( i = arg ; i < cmd_argc ; i++ ) {
+		Q_strcat( cmd_args, sizeof( cmd_args ), cmd_argv[i] );
 		if ( i != cmd_argc-1 ) {
-			strcat( cmd_args, " " );
+			Q_strcat( cmd_args, sizeof( cmd_args ), " " );
 		}
 	}
 
@@ -423,24 +431,11 @@ char	*Cmd_Args( void ) {
 ============
 Cmd_Args
 
-Returns a single string containing argv(arg) to argv(argc()-1)
+Returns a single string containing argv(1) to argv(argc()-1)
 ============
 */
-char *Cmd_ArgsFrom( int arg ) {
-	static	char		cmd_args[BIG_INFO_STRING];
-	int		i;
-
-	cmd_args[0] = 0;
-	if (arg < 0)
-		arg = 0;
-	for ( i = arg ; i < cmd_argc ; i++ ) {
-		strcat( cmd_args, cmd_argv[i] );
-		if ( i != cmd_argc-1 ) {
-			strcat( cmd_args, " " );
-		}
-	}
-
-	return cmd_args;
+char	*Cmd_Args( void ) {
+	return Cmd_ArgsFrom( 1 );
 }
 
 /*
@@ -452,7 +447,19 @@ they can't have pointers returned to them
 ============
 */
 void	Cmd_ArgsBuffer( char *buffer, int bufferLength ) {
-	Q_strncpyz( buffer, Cmd_Args(), bufferLength );
+	Q_strncpyz( buffer, Cmd_ArgsFrom( 1 ), bufferLength );
+}
+
+/*
+============
+Cmd_ArgsFromBuffer
+
+The interpreted versions use this because
+they can't have pointers returned to them
+============
+*/
+void	Cmd_ArgsFromBuffer( int arg, char *buffer, int bufferLength ) {
+	Q_strncpyz( buffer, Cmd_Args( ), bufferLength );
 }
 
 /*
@@ -489,7 +496,7 @@ static void Cmd_TokenizeString2( const char *text_in, qboolean ignoreQuotes ) {
 	if ( !text_in ) {
 		return;
 	}
-	
+
 	Q_strncpyz( cmd_cmd, text_in, sizeof(cmd_cmd) );
 
 	text = text_in;
@@ -573,7 +580,7 @@ static void Cmd_TokenizeString2( const char *text_in, qboolean ignoreQuotes ) {
 			return;		// all tokens parsed
 		}
 	}
-	
+
 }
 
 /*
@@ -601,7 +608,7 @@ Cmd_AddCommand
 */
 void	Cmd_AddCommand( const char *cmd_name, xcommand_t function ) {
 	cmd_function_t	*cmd;
-	
+
 	// fail if the command already exists
 	if( Cmd_FindCommand( cmd_name ) )
 	{
@@ -667,7 +674,7 @@ Cmd_CommandCompletion
 */
 void	Cmd_CommandCompletion( callbackFunc_t callback ) {
 	cmd_function_t	*cmd;
-	
+
 	for (cmd=cmd_functions ; cmd ; cmd=cmd->next) {
 		callback( cmd->name );
 	}
@@ -692,18 +699,17 @@ Cmd_ExecuteString
 A complete command line has been parsed, so try to execute it
 ============
 */
-void	Cmd_ExecuteString( const char *text ) {	
+void	Cmd_ExecuteString( const char *text ) {
 	cmd_function_t	*cmd, **prev;
 
 	// execute the command line
-	Cmd_TokenizeString( text );		
+	Cmd_TokenizeString( text );
 	if ( !Cmd_Argc() ) {
 		return;		// no tokens
 	}
 
-	// check registered command functions	
-	for ( prev = &cmd_functions ; *prev ; prev = &cmd->next )
-	{
+	// check registered command functions
+	for ( prev = &cmd_functions ; *prev ; prev = &cmd->next ) {
 		cmd = *prev;
 		if ( !Q_stricmp( Cmd_Argv(0), cmd->name ) ) {
 			// rearrange the links so that the command will be
@@ -722,7 +728,7 @@ void	Cmd_ExecuteString( const char *text ) {
 			return;
 		}
 	}
-	
+
 	// check cvars
 	if ( Cvar_Command() ) {
 		return;
@@ -755,25 +761,39 @@ Cmd_List_f
 */
 void Cmd_List_f (void)
 {
-	cmd_function_t	*cmd;
-	int				i;
-	const char			*match;
+	cmd_function_t	*cmd = NULL;
+	int				i, j;
+	char			*match = NULL;
 
 	if ( Cmd_Argc() > 1 ) {
 		match = Cmd_Argv( 1 );
-	} else {
-		match = NULL;
 	}
 
-	i = 0;
-	for ( cmd=cmd_functions; cmd; cmd=cmd->next )
+	for ( cmd=cmd_functions, i=0, j=0;
+		cmd;
+		cmd=cmd->next, i++ )
 	{
-		if (match && !Com_Filter(match, cmd->name, qfalse)) continue;
+		if ( !cmd->name || (match && !Com_Filter( match, cmd->name, qfalse )) )
+			continue;
 
-		Com_Printf ("%s\n", cmd->name);
-		i++;
+		Com_Printf (" %s\n", cmd->name);
+		j++;
 	}
-	Com_Printf ("%i commands\n", i);
+
+	Com_Printf ("\n%i total commands\n", i);
+	if ( i != j )
+		Com_Printf( "%i matching commands\n", j );
+}
+
+/*
+==================
+Cmd_CompleteCfgName
+==================
+*/
+void Cmd_CompleteCfgName( char *args, int argNum ) {
+	if( argNum == 2 ) {
+		Field_CompleteFilename( "", "cfg", qfalse, qtrue );
+	}
 }
 
 /*
@@ -781,16 +801,14 @@ void Cmd_List_f (void)
 Cmd_Init
 ============
 */
-void Cmd_Init (void)
-{
-//
-// register our commands
-//
+void Cmd_Init (void) {
 	Cmd_AddCommand ("cmdlist",Cmd_List_f);
 	Cmd_AddCommand ("exec",Cmd_Exec_f);
 	Cmd_AddCommand ("execq",Cmd_Exec_f);
+	Cmd_SetCommandCompletionFunc( "exec", Cmd_CompleteCfgName );
+	Cmd_SetCommandCompletionFunc( "execq", Cmd_CompleteCfgName );
 	Cmd_AddCommand ("vstr",Cmd_Vstr_f);
+	Cmd_SetCommandCompletionFunc( "vstr", Cvar_CompleteCvarName );
 	Cmd_AddCommand ("echo",Cmd_Echo_f);
 	Cmd_AddCommand ("wait", Cmd_Wait_f);
 }
-

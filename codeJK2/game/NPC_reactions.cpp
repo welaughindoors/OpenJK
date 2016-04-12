@@ -1,33 +1,33 @@
 /*
-This file is part of Jedi Knight 2.
+===========================================================================
+Copyright (C) 2000 - 2013, Raven Software, Inc.
+Copyright (C) 2001 - 2013, Activision, Inc.
+Copyright (C) 2013 - 2015, OpenJK contributors
 
-    Jedi Knight 2 is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+This file is part of the OpenJK source code.
 
-    Jedi Knight 2 is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+OpenJK is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 as
+published by the Free Software Foundation.
 
-    You should have received a copy of the GNU General Public License
-    along with Jedi Knight 2.  If not, see <http://www.gnu.org/licenses/>.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, see <http://www.gnu.org/licenses/>.
+===========================================================================
 */
-// Copyright 2001-2013 Raven Software
 
 //NPC_reactions.cpp
 
-// leave this line at the top for all NPC_xxxx.cpp files...
 #include "g_headers.h"
-
-
 
 
 #include "b_local.h"
 #include "anims.h"
 #include "g_functions.h"
-#include "characters.h"
 #include "wp_saber.h"
 
 extern qboolean G_CheckForStrongAttackMomentum( gentity_t *self );
@@ -160,14 +160,10 @@ void NPC_SetPainEvent( gentity_t *self )
 {
 	if ( !self->NPC || !(self->NPC->aiFlags&NPCAI_DIE_ON_IMPACT) )
 	{
-	// no more borg
-	//	if( self->client->playerTeam != TEAM_BORG )
-	//	{
-			if ( !Q3_TaskIDPending( self, TID_CHAN_VOICE ) )
-			{
-				G_AddEvent( self, EV_PAIN, floor((float)self->health/self->max_health*100.0f) );
-			}
-	//	}
+        if ( !Q3_TaskIDPending( self, TID_CHAN_VOICE ) )
+        {
+            G_AddEvent( self, EV_PAIN, floor((float)self->health/self->max_health*100.0f) );
+        }
 	}
 }
 
@@ -262,7 +258,7 @@ void NPC_ChoosePainAnimation( gentity_t *self, gentity_t *other, vec3_t point, i
 	}
 	else 
 	{
-		if ( other && other->s.weapon == WP_SABER || mod == MOD_ELECTROCUTE || mod == MOD_CRUSH/*FIXME:MOD_FORCE_GRIP*/ )
+		if ( other && (other->s.weapon == WP_SABER || mod == MOD_ELECTROCUTE || mod == MOD_CRUSH/*FIXME:MOD_FORCE_GRIP*/) )
 		{
 			pain_chance = 1.0f;//always take pain from saber
 		}
@@ -297,6 +293,7 @@ void NPC_ChoosePainAnimation( gentity_t *self, gentity_t *other, vec3_t point, i
 				|| PM_RollingAnim( self->client->ps.legsAnim )
 				|| (PM_FlippingAnim( self->client->ps.legsAnim )&&!PM_InCartwheel( self->client->ps.legsAnim )) )
 			{//strong attacks, rolls, knockdowns, flips and spins cannot be interrupted by pain
+				return;
 			}
 			else
 			{//play an anim
@@ -569,8 +566,7 @@ void NPC_Touch(gentity_t *self, gentity_t *other, trace_t *trace)
 				G_Sound( player, G_SoundIndex( "sound/weapons/key_pkup.wav" ) );
 				//FIXME: need some event to pass to cgame for sound/graphic/message?
 			}
-			//FIXME: temp message
-			gi.SendServerCommand( NULL, text );
+			gi.SendServerCommand( 0, text );
 		}
 	}
 
@@ -896,6 +892,8 @@ void NPC_Respond( gentity_t *self, int userNum )
 		break;
 	case CLASS_GONK:				// droid
 		G_Sound(self, G_SoundIndex(va("sound/chars/gonk/misc/gonktalk%d.wav",Q_irand(1, 2))));
+		break;
+	default:
 		break;
 	}
 	

@@ -1,5 +1,26 @@
-// Copyright (C) 1999-2000 Id Software, Inc.
-//
+/*
+===========================================================================
+Copyright (C) 1999 - 2005, Id Software, Inc.
+Copyright (C) 2000 - 2013, Raven Software, Inc.
+Copyright (C) 2001 - 2013, Activision, Inc.
+Copyright (C) 2013 - 2015, OpenJK contributors
+
+This file is part of the OpenJK source code.
+
+OpenJK is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 as
+published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, see <http://www.gnu.org/licenses/>.
+===========================================================================
+*/
+
 #include "g_local.h"
 
 //==========================================================
@@ -183,7 +204,7 @@ void Use_Target_Print (gentity_t *ent, gentity_t *other, gentity_t *activator)
 #endif
 
 	G_ActivateBehavior(ent,BSET_USE);
-	if ( ( ent->spawnflags & 4 ) ) 
+	if ( ( ent->spawnflags & 4 ) )
 	{//private, to one client only
 		if (!activator || !activator->inuse)
 		{
@@ -368,7 +389,7 @@ void target_laser_think (gentity_t *self) {
 
 	if ( tr.entityNum ) {
 		// hurt it if we can
-		G_Damage ( &g_entities[tr.entityNum], self, self->activator, self->movedir, 
+		G_Damage ( &g_entities[tr.entityNum], self, self->activator, self->movedir,
 			tr.endpos, self->damage, DAMAGE_NO_KNOCKBACK, MOD_TARGET_LASER);
 	}
 
@@ -480,11 +501,11 @@ wait - set to -1 to use it only once
 */
 void target_relay_use (gentity_t *self, gentity_t *other, gentity_t *activator) {
 	qboolean ranscript = qfalse;
-	if ( ( self->spawnflags & 1 ) && activator->client 
+	if ( ( self->spawnflags & 1 ) && activator->client
 		&& activator->client->sess.sessionTeam != TEAM_RED ) {
 		return;
 	}
-	if ( ( self->spawnflags & 2 ) && activator->client 
+	if ( ( self->spawnflags & 2 ) && activator->client
 		&& activator->client->sess.sessionTeam != TEAM_BLUE ) {
 		return;
 	}
@@ -553,36 +574,6 @@ void SP_target_position( gentity_t *self ){
 	*/
 }
 
-static void target_location_linkup(gentity_t *ent)
-{
-	int i;
-	int n;
-
-	if (level.locationLinked) 
-		return;
-
-	level.locationLinked = qtrue;
-
-	level.locationHead = NULL;
-
-	trap->SetConfigstring( CS_LOCATIONS, "unknown" );
-
-	for (i = 0, ent = g_entities, n = 1;
-			i < level.num_entities;
-			i++, ent++) {
-		if (ent->classname && !Q_stricmp(ent->classname, "target_location")) {
-			// lets overload some variables!
-			ent->health = n; // use for location marking
-			trap->SetConfigstring( CS_LOCATIONS + n, ent->message );
-			n++;
-			ent->nextTrain = level.locationHead;
-			level.locationHead = ent;
-		}
-	}
-
-	// All linked together now
-}
-
 /*QUAKED target_location (0 0.5 0) (-8 -8 -8) (8 8 8)
 Set "message" to the name of this location.
 Set "count" to 0-7 for color.
@@ -591,11 +582,36 @@ Set "count" to 0-7 for color.
 Closest target_location in sight used for the location, if none
 in site, closest in distance
 */
-void SP_target_location( gentity_t *self ){
-	self->think = target_location_linkup;
-	self->nextthink = level.time + 200;  // Let them all spawn first
+void SP_target_location( gentity_t *self ) {
+	if ( self->targetname && self->targetname[0] ) {
+		SP_target_position( self );
+		return;
+	}
+	else {
+		static qboolean didwarn = qfalse;
+		if ( !self->message ) {
+			trap->Print( "target_location with no message at %s\n", vtos( self->s.origin ) );
+			G_FreeEntity( self );
+			return;
+		}
 
-	G_SetOrigin( self, self->s.origin );
+		if ( level.locations.num >= MAX_LOCATIONS ) {
+			if ( !didwarn ) {
+				trap->Print( "Maximum target_locations hit (%d)! Remaining locations will be removed.\n", MAX_LOCATIONS );
+				didwarn = qtrue;
+			}
+			G_FreeEntity( self );
+			return;
+		}
+
+		VectorCopy( self->s.origin, level.locations.data[level.locations.num].origin );
+		Q_strncpyz( level.locations.data[level.locations.num].message, self->message, sizeof( level.locations.data[level.locations.num].message ) );
+		level.locations.data[level.locations.num].count = Com_Clampi( 0, 7, self->count );
+
+		level.locations.num++;
+
+		G_FreeEntity( self );
+	}
 }
 
 /*QUAKED target_counter (1.0 0 0) (-4 -4 -4) (4 4 4) x x x x x x x INACTIVE
@@ -616,7 +632,7 @@ void target_counter_use( gentity_t *self, gentity_t *other, gentity_t *activator
 	{
 		return;
 	}
-	
+
 	//trap->Printf("target_counter %s used by %s, entnum %d\n", self->targetname, activator->targetname, activator->s.number );
 	self->count--;
 
@@ -634,7 +650,7 @@ void target_counter_use( gentity_t *self, gentity_t *other, gentity_t *activator
 		}
 		return;
 	}
-	
+
 	G_ActivateBehavior( self,BSET_USE );
 
 	if ( self->spawnflags & 128 )
@@ -654,7 +670,7 @@ void target_counter_use( gentity_t *self, gentity_t *other, gentity_t *activator
 		self->count = self->genericValue1;
 		if ( self->bounceCount > 0 )
 		{//-1 means bounce back forever
-			self->bounceCount--; 
+			self->bounceCount--;
 		}
 	}
 }
@@ -725,7 +741,7 @@ void target_random_use(gentity_t *self, gentity_t *other, gentity_t *activator)
 		{
 			continue;
 		}
-		
+
 		if (t == self)
 		{
 //				trap->Printf ("WARNING: Entity used itself.\n");
@@ -757,7 +773,7 @@ void scriptrunner_run (gentity_t *self)
 {
 	/*
 	if (self->behaviorSet[BSET_USE])
-	{	
+	{
 		char	newname[MAX_FILENAME_LENGTH];
 
 		sprintf((char *) &newname, "%s/%s", Q3_SCRIPT_DIR, self->behaviorSet[BSET_USE] );

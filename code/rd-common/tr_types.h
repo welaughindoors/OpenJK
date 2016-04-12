@@ -1,20 +1,26 @@
 /*
-This file is part of Jedi Academy.
+===========================================================================
+Copyright (C) 1999 - 2005, Id Software, Inc.
+Copyright (C) 2000 - 2013, Raven Software, Inc.
+Copyright (C) 2001 - 2013, Activision, Inc.
+Copyright (C) 2005 - 2015, ioquake3 contributors
+Copyright (C) 2013 - 2015, OpenJK contributors
 
-    Jedi Academy is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+This file is part of the OpenJK source code.
 
-    Jedi Academy is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+OpenJK is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 as
+published by the Free Software Foundation.
 
-    You should have received a copy of the GNU General Public License
-    along with Jedi Academy.  If not, see <http://www.gnu.org/licenses/>.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, see <http://www.gnu.org/licenses/>.
+===========================================================================
 */
-// Copyright 2001-2013 Raven Software
 
 #ifndef __TR_TYPES_H
 #define __TR_TYPES_H
@@ -22,8 +28,12 @@ This file is part of Jedi Academy.
 #include "../game/ghoul2_shared.h"
 
 #define	MAX_DLIGHTS		32			// can't be increased, because bit flags are used on surfaces
-#define	MAX_ENTITIES	2048		// 11 bits, can't be increased without changing drawsurf bit packing (QSORT_ENTITYNUM_SHIFT)
-#define TR_WORLDENT (MAX_ENTITIES-1)
+#define	REFENTITYNUM_BITS	11		// can't be increased without changing drawsurf bit packing
+#define	REFENTITYNUM_MASK	((1<<REFENTITYNUM_BITS) - 1)
+// the last N-bit number (2^REFENTITYNUM_BITS - 1) is reserved for the special world refentity,
+//  and this is reflected by the value of MAX_REFENTITIES (which therefore is not a power-of-2)
+#define	MAX_REFENTITIES		((1<<REFENTITYNUM_BITS) - 1)
+#define	REFENTITYNUM_WORLD	((1<<REFENTITYNUM_BITS) - 1)
 
 // renderfx flags
 #define	RF_MORELIGHT		0x00001	// allways have some light (viewmodel, some items)
@@ -93,7 +103,7 @@ typedef struct poly_s {
 	polyVert_t			*verts;
 } poly_t;
 
-typedef enum 
+typedef enum
 {
 	RT_MODEL,
 	RT_POLY,
@@ -210,7 +220,7 @@ typedef enum {
 	TC_S3TC_DXT
 } textureCompression_t;
 
-typedef struct {
+typedef struct glconfig_s {
 	const char				*renderer_string;
 	const char				*vendor_string;
 	const char				*version_string;

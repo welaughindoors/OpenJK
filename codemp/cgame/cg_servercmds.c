@@ -1,12 +1,33 @@
-// Copyright (C) 1999-2000 Id Software, Inc.
-//
+/*
+===========================================================================
+Copyright (C) 1999 - 2005, Id Software, Inc.
+Copyright (C) 2000 - 2013, Raven Software, Inc.
+Copyright (C) 2001 - 2013, Activision, Inc.
+Copyright (C) 2005 - 2015, ioquake3 contributors
+Copyright (C) 2013 - 2015, OpenJK contributors
+
+This file is part of the OpenJK source code.
+
+OpenJK is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 as
+published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, see <http://www.gnu.org/licenses/>.
+===========================================================================
+*/
+
 // cg_servercmds.c -- reliably sequenced text commands sent by the server
 // these are processed at snapshot transition time, so there will definately
 // be a valid snapshot this frame
 
 #include "cg_local.h"
 #include "ui/menudef.h"
-#include "cg_lights.h"
 #include "ghoul2/G2.h"
 #include "ui/ui_public.h"
 
@@ -106,7 +127,7 @@ and whenever the server updates any serverinfo flagged cvars
 ================
 */
 void CG_ParseServerinfo( void ) {
-	const char *info = NULL, *tinfo = NULL;
+	const char *info = NULL;
 	char *mapname;
 	int i, value;
 
@@ -167,6 +188,7 @@ void CG_ParseServerinfo( void ) {
 	trap->Cvar_Set ( "ui_about_mapname", mapname );
 
 	Com_sprintf( cgs.mapname, sizeof( cgs.mapname ), "maps/%s.bsp", mapname );
+	Com_sprintf( cgs.rawmapname, sizeof( cgs.rawmapname ), "maps/%s", mapname );
 //	Q_strncpyz( cgs.redTeam, Info_ValueForKey( info, "g_redTeam" ), sizeof(cgs.redTeam) );
 //	trap->Cvar_Set("g_redTeam", cgs.redTeam);
 //	Q_strncpyz( cgs.blueTeam, Info_ValueForKey( info, "g_blueTeam" ), sizeof(cgs.blueTeam) );
@@ -187,37 +209,9 @@ void CG_ParseServerinfo( void ) {
 	trap->Cvar_Set("cg_siegeTeam1", Info_ValueForKey(info, "g_siegeTeam1"));
 	trap->Cvar_Set("cg_siegeTeam2", Info_ValueForKey(info, "g_siegeTeam2"));
 
-	tinfo = CG_ConfigString( CS_TERRAINS + 1 );
-	if ( !tinfo || !*tinfo )
-	{
-		cg.mInRMG = qfalse;
-	}
-	else
-	{
-		int weather = 0;
-
-		cg.mInRMG = qtrue;
-		trap->Cvar_Set("RMG", "1");
-
-		weather = atoi( Info_ValueForKey( info, "RMG_weather" ) );
-
-		trap->Cvar_Set("RMG_weather", va("%i", weather));
-
-		if (weather == 1 || weather == 2)
-		{
-			cg.mRMGWeather = qtrue;
-		}
-		else
-		{
-			cg.mRMGWeather = qfalse;
-		}
-	}
-
-	//Raz: Fix bogus vote strings
 	Q_strncpyz( cgs.voteString, CG_ConfigString( CS_VOTE_STRING ), sizeof( cgs.voteString ) );
 
-	//Raz: Synchronise our expected snaps/sec with the server's framerate
-	//		OpenJK servers will try to match us to the sv_fps too (sv_client.cpp -> SV_UserinfoChanged)
+	// synchronise our expected snaps/sec with the server's framerate
 	i = atoi( Info_ValueForKey( info, "sv_fps" ) );
 	if ( i )
 		trap->Cvar_Set( "snaps", va( "%i", i ) );
@@ -240,9 +234,9 @@ static void CG_ParseWarmup( void ) {
 	cg.warmup = warmup;
 }
 
-//Raz: This is a reverse map of flag statuses as seen in g_team.c
+// this is a reverse map of flag statuses as seen in g_team.c
 //static char ctfFlagStatusRemap[] = { '0', '1', '*', '*', '2' };
-static char ctfFlagStatusRemap[] = { 	
+static char ctfFlagStatusRemap[] = {
 	FLAG_ATBASE,
 	FLAG_TAKEN,			// CTF
 	// server doesn't use FLAG_TAKEN_RED or FLAG_TAKEN_BLUE
@@ -257,7 +251,7 @@ CG_SetConfigValues
 Called on load to set the initial values from configure strings
 ================
 */
-void CG_SetConfigValues( void ) 
+void CG_SetConfigValues( void )
 {
 	const char *s;
 	const char *str;
@@ -274,10 +268,10 @@ void CG_SetConfigValues( void )
 		blueflagId = s[1] - '0';
 
 		// fix: proper flag statuses mapping for dropped flag
-		if ( redflagId >= 0 && redflagId < ARRAY_LEN( ctfFlagStatusRemap ) ) 
+		if ( redflagId >= 0 && redflagId < ARRAY_LEN( ctfFlagStatusRemap ) )
 			cgs.redflag = ctfFlagStatusRemap[redflagId];
 
-		if ( blueflagId >= 0 && blueflagId < ARRAY_LEN( ctfFlagStatusRemap ) ) 
+		if ( blueflagId >= 0 && blueflagId < ARRAY_LEN( ctfFlagStatusRemap ) )
 			cgs.blueflag = ctfFlagStatusRemap[blueflagId];
 	}
 	cg.warmup = atoi( CG_ConfigString( CS_WARMUP ) );
@@ -435,17 +429,18 @@ static void CG_RegisterCustomSounds(clientInfo_t *ci, int setType, const char *p
 		break;
 	case 5:
 		iTableEntries = MAX_CUSTOM_SIEGE_SOUNDS;
+		break;
 	default:
 		assert(0);
 		return;
 	}
 
-	for ( i = 0 ; i<iTableEntries; i++ ) 
+	for ( i = 0 ; i<iTableEntries; i++ )
 	{
 		sfxHandle_t hSFX;
 		const char *s = GetCustomSoundForType(setType, i);
 
-		if ( !s ) 
+		if ( !s )
 		{
 			break;
 		}
@@ -481,7 +476,7 @@ static void CG_RegisterCustomSounds(clientInfo_t *ci, int setType, const char *p
 				}
 			}
 		}
-		
+
 		SetCustomSoundForType(ci, setType, i, hSFX);
 	}
 }
@@ -904,11 +899,10 @@ static void CG_ConfigStringModified( void ) {
 			// format is rb where its red/blue, 0 is at base, 1 is taken, 2 is dropped
 			int redflagId = str[0] - '0', blueflagId = str[1] - '0';
 
-			//Raz: improved flag status remapping
-			if ( redflagId >= 0 && redflagId < ARRAY_LEN( ctfFlagStatusRemap ) ) 
+			if ( redflagId >= 0 && redflagId < ARRAY_LEN( ctfFlagStatusRemap ) )
 				cgs.redflag = ctfFlagStatusRemap[redflagId];
 
-			if ( blueflagId >= 0 && blueflagId < ARRAY_LEN( ctfFlagStatusRemap ) )  
+			if ( blueflagId >= 0 && blueflagId < ARRAY_LEN( ctfFlagStatusRemap ) )
 				cgs.blueflag = ctfFlagStatusRemap[blueflagId];
 		}
 	}
@@ -919,7 +913,7 @@ static void CG_ConfigStringModified( void ) {
 	{
 		CG_SetLightstyle(num - CS_LIGHT_STYLES);
 	}
-		
+
 }
 
 //frees all ghoul2 stuff and npc stuff from a centity -rww
@@ -1064,7 +1058,6 @@ static void CG_MapRestart( void ) {
 
 	CG_InitLocalEntities();
 	CG_InitMarkPolys();
-	CG_ClearParticles ();
 	CG_KillCEntityInstances();
 
 	// make sure the "3 frags left" warnings play again
@@ -1317,8 +1310,10 @@ static void CG_SiegeClassSelect_f( void ) {
 }
 
 static void CG_SiegeProfileMenu_f( void ) {
-	trap->Cvar_Set( "ui_myteam", "3" );
-	trap->OpenUIMenu( UIMENU_PLAYERCONFIG ); //UIMENU_CLASSSEL
+	if ( !cg.demoPlayback ) {
+		trap->Cvar_Set( "ui_myteam", "3" );
+		trap->OpenUIMenu( UIMENU_PLAYERCONFIG ); //UIMENU_CLASSSEL
+	}
 }
 
 static void CG_NewForceRank_f( void ) {
@@ -1342,7 +1337,7 @@ static void CG_NewForceRank_f( void ) {
 
 	trap->Cvar_Set( "ui_myteam", va( "%i", setTeam ) );
 
-	if ( !( trap->Key_GetCatcher() & KEYCATCH_UI ) && doMenu )
+	if ( !( trap->Key_GetCatcher() & KEYCATCH_UI ) && doMenu && !cg.demoPlayback )
 		trap->OpenUIMenu( UIMENU_PLAYERCONFIG );
 }
 
@@ -1356,7 +1351,7 @@ static void CG_KillGhoul2_f( void ) {
 
 	if ( argNum < 1 )
 		return;
-	
+
 	for ( i=1; i<argNum; i++ ) {
 		indexNum = atoi( CG_Argv( i ) );
 
@@ -1466,7 +1461,7 @@ static void CG_RestoreClientGhoul_f( void ) {
 		clent->isRagging = qfalse;
 		trap->G2API_SetRagDoll( clent->ghoul2, NULL ); //calling with null parms resets to no ragdoll.
 	}
-		
+
 	//clear all the decals as well
 	trap->G2API_ClearSkinGore( clent->ghoul2 );
 
@@ -1502,7 +1497,7 @@ static void CG_Print_f( void ) {
 void CG_ChatBox_AddString(char *chatStr);
 static void CG_Chat_f( void ) {
 	char cmd[MAX_STRING_CHARS] = {0}, text[MAX_SAY_TEXT] = {0};
-	
+
 	trap->Cmd_Argv( 0, cmd, sizeof( cmd ) );
 
 	if ( !strcmp( cmd, "chat" ) ) {
@@ -1598,7 +1593,6 @@ int svcmdcmp( const void *a, const void *b ) {
 	return Q_stricmp( (const char *)a, ((serverCommand_t*)b)->cmd );
 }
 
-/* This array MUST be sorted correctly by alphabetical name field */
 static serverCommand_t	commands[] = {
 	{ "chat",				CG_Chat_f },
 	{ "clientLevelShot",	CG_ClientLevelShot_f },
@@ -1640,7 +1634,12 @@ static void CG_ServerCommand( void ) {
 	const char		*cmd = CG_Argv( 0 );
 	serverCommand_t	*command = NULL;
 
-	command = (serverCommand_t *)bsearch( cmd, commands, numCommands, sizeof( commands[0] ), svcmdcmp );
+	if ( !cmd[0] ) {
+		// server claimed the command
+		return;
+	}
+
+	command = (serverCommand_t *)Q_LinearSearch( cmd, commands, numCommands, sizeof( commands[0] ), svcmdcmp );
 
 	if ( command ) {
 		command->func();

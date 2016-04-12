@@ -1,5 +1,26 @@
-// Copyright (C) 1999-2000 Id Software, Inc.
-//
+/*
+===========================================================================
+Copyright (C) 1999 - 2005, Id Software, Inc.
+Copyright (C) 2000 - 2013, Raven Software, Inc.
+Copyright (C) 2001 - 2013, Activision, Inc.
+Copyright (C) 2013 - 2015, OpenJK contributors
+
+This file is part of the OpenJK source code.
+
+OpenJK is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 as
+published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, see <http://www.gnu.org/licenses/>.
+===========================================================================
+*/
+
 // g_bot.c
 
 #include "g_local.h"
@@ -9,12 +30,10 @@
 
 #define BOT_SPAWN_QUEUE_DEPTH	16
 
-typedef struct botSpawnQueue_s {
+static struct botSpawnQueue_s {
 	int		clientNum;
 	int		spawnTime;
-} botSpawnQueue_t;
-
-static botSpawnQueue_t	botSpawnQueue[BOT_SPAWN_QUEUE_DEPTH];
+} botSpawnQueue[BOT_SPAWN_QUEUE_DEPTH];
 
 vmCvar_t bot_minplayers;
 
@@ -246,7 +265,7 @@ const char *G_RefreshNextMap(int gametype, qboolean forced)
 		}
 
 		type = Info_ValueForKey(level.arenas.infos[n], "type");
-		
+
 		typeBits = G_GetMapTypeBits(type);
 		if (typeBits & (1 << gametype))
 		{
@@ -278,12 +297,11 @@ G_LoadArenas
 */
 
 #define MAX_MAPS 256
-#define MAPSBUFSIZE (MAX_MAPS * 32)
+#define MAPSBUFSIZE (MAX_MAPS * 64)
 
 void G_LoadArenas( void ) {
 #if 0
 	int			numdirs;
-	char		filename[128];
 	char		filename[MAX_QPATH];
 	char		dirlist[1024];
 	char*		dirptr;
@@ -297,20 +315,19 @@ void G_LoadArenas( void ) {
 	dirptr  = dirlist;
 	for (i = 0; i < numdirs; i++, dirptr += dirlen+1) {
 		dirlen = strlen(dirptr);
-		strcpy(filename, "scripts/");
 		Q_strncpyz( filename, "scripts/", sizeof( filename ) );
 		strcat(filename, dirptr);
 		G_LoadArenasFromFile(filename);
 	}
 //	trap->Print( "%i arenas parsed\n", level.arenas.num );
-	
+
 	for( n = 0; n < level.arenas.num; n++ ) {
 		Info_SetValueForKey( level.arenas.infos[n], "num", va( "%i", n ) );
 	}
 
 	G_RefreshNextMap(level.gametype, qfalse);
 
-#else // Ensiform's version
+#else
 
 	int			numFiles;
 	char		filelist[MAPSBUFSIZE];
@@ -337,7 +354,7 @@ void G_LoadArenas( void ) {
 		fileptr += len + 1;
 	}
 //	trap->Print( "%i arenas parsed\n", level.arenas.num );
-	
+
 	for( n = 0; n < level.arenas.num; n++ ) {
 		Info_SetValueForKey( level.arenas.infos[n], "num", va( "%i", n ) );
 	}
@@ -411,7 +428,6 @@ void G_AddRandomBot( int team ) {
 			if ( cl->pers.connected != CON_CONNECTED ) {
 				continue;
 			}
-			//JAC: Invalid clientNum was being used
 			if ( !(g_entities[i].r.svFlags & SVF_BOT) ) {
 				continue;
 			}
@@ -444,7 +460,6 @@ void G_AddRandomBot( int team ) {
 			if ( cl->pers.connected != CON_CONNECTED ) {
 				continue;
 			}
-			//JAC: Invalid clientNum was being used
 			if ( !(g_entities[i].r.svFlags & SVF_BOT) ) {
 				continue;
 			}
@@ -494,12 +509,9 @@ int G_RemoveRandomBot( int team ) {
 		if ( cl->pers.connected != CON_CONNECTED ) {
 			continue;
 		}
-		//JAC: Invalid clientNum was being used
 		if ( !(g_entities[i].r.svFlags & SVF_BOT) )
 			continue;
 
-		//JAC: this entity is actually following another entity so the ps data is for a different entity.
-		//		Bots never spectate like this so, skip this player.
 		if ( cl->sess.sessionTeam == TEAM_SPECTATOR && cl->sess.spectatorState == SPECTATOR_FOLLOW )
 			continue;
 
@@ -826,8 +838,8 @@ static void G_AddBot( const char *name, float skill, const char *team, int delay
 	// get the botinfo from bots.txt
 	botinfo = G_GetBotInfoByName( name );
 	if ( !botinfo ) {
-		trap->BotFreeClient( clientNum );
 		trap->Print( S_COLOR_RED "Error: Bot '%s' not defined\n", name );
+		trap->BotFreeClient( clientNum );
 		return;
 	}
 
@@ -883,7 +895,6 @@ static void G_AddBot( const char *name, float skill, const char *team, int delay
 	if ( !*s )	s = "none";
 	Info_SetValueForKey( userinfo, key, s );
 
-	//Raz: Added
 	key = "forcepowers";
 	s = Info_ValueForKey( botinfo, key );
 	if ( !*s )	s = DEFAULT_FORCEPOWERS;
@@ -922,7 +933,7 @@ static void G_AddBot( const char *name, float skill, const char *team, int delay
 	// initialize the bot settings
 	if ( !team || !*team ) {
 		if ( level.gametype >= GT_TEAM ) {
-			if ( PickTeam( clientNum ) == TEAM_RED)
+			if ( PickTeam( clientNum ) == TEAM_RED )
 				team = "red";
 			else
 				team = "blue";
@@ -1145,7 +1156,7 @@ static void G_SpawnBots( char *botList, int baseDelay ) {
 		while( *p && *p == ' ' ) {
 			p++;
 		}
-		if( !p ) {
+		if( !*p ) {
 			break;
 		}
 

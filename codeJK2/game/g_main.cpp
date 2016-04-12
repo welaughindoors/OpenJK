@@ -1,25 +1,27 @@
 /*
-This file is part of Jedi Knight 2.
+===========================================================================
+Copyright (C) 1999 - 2005, Id Software, Inc.
+Copyright (C) 2000 - 2013, Raven Software, Inc.
+Copyright (C) 2001 - 2013, Activision, Inc.
+Copyright (C) 2013 - 2015, OpenJK contributors
 
-    Jedi Knight 2 is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+This file is part of the OpenJK source code.
 
-    Jedi Knight 2 is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+OpenJK is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 as
+published by the Free Software Foundation.
 
-    You should have received a copy of the GNU General Public License
-    along with Jedi Knight 2.  If not, see <http://www.gnu.org/licenses/>.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, see <http://www.gnu.org/licenses/>.
+===========================================================================
 */
-// Copyright 2001-2013 Raven Software
 
-// leave this line at the top for all g_xxxx.cpp files...
 #include "g_headers.h"
-
-
 
 #include "g_local.h"
 #include "g_functions.h"
@@ -56,16 +58,16 @@ void ClearAllInUse(void)
 
 void SetInUse(gentity_t *ent)
 {
-	//assert(((unsigned int)ent)>=(unsigned int)g_entities);
-	//assert(((unsigned int)ent)<=(unsigned int)(g_entities+MAX_GENTITIES-1));
+	assert(((uintptr_t)ent)>=(uintptr_t)g_entities);
+	assert(((uintptr_t)ent)<=(uintptr_t)(g_entities+MAX_GENTITIES-1));
 	unsigned int entNum=ent-g_entities;
 	g_entityInUseBits[entNum/32]|=((unsigned int)1)<<(entNum&0x1f);
 }
 
 void ClearInUse(gentity_t *ent)
 {
-	//assert(((unsigned int)ent)>=(unsigned int)g_entities);
-	//assert(((unsigned int)ent)<=(unsigned int)(g_entities+MAX_GENTITIES-1));
+	assert(((uintptr_t)ent)>=(uintptr_t)g_entities);
+	assert(((uintptr_t)ent)<=(uintptr_t)(g_entities+MAX_GENTITIES-1));
 	unsigned int entNum=ent-g_entities;
 	g_entityInUseBits[entNum/32]&=~(((unsigned int)1)<<(entNum&0x1f));
 }
@@ -79,20 +81,20 @@ qboolean PInUse(unsigned int entNum)
 
 qboolean PInUse2(gentity_t *ent)
 {
-	//assert(((unsigned int)ent)>=(unsigned int)g_entities);
-	//assert(((unsigned int)ent)<=(unsigned int)(g_entities+MAX_GENTITIES-1));
+	assert(((uintptr_t)ent)>=(uintptr_t)g_entities);
+	assert(((uintptr_t)ent)<=(uintptr_t)(g_entities+MAX_GENTITIES-1));
 	unsigned int entNum=ent-g_entities;
 	return((g_entityInUseBits[entNum/32]&(((unsigned int)1)<<(entNum&0x1f)))!=0);
 }
 
 void WriteInUseBits(void)
 {
-	gi.AppendToSaveGame('INUS', &g_entityInUseBits, sizeof(g_entityInUseBits) );
+	gi.AppendToSaveGame(INT_ID('I','N','U','S'), &g_entityInUseBits, sizeof(g_entityInUseBits) );
 }
 
 void ReadInUseBits(void)
 {
-	gi.ReadFromSaveGame('INUS', &g_entityInUseBits, sizeof(g_entityInUseBits), NULL);
+	gi.ReadFromSaveGame(INT_ID('I','N','U','S'), &g_entityInUseBits, sizeof(g_entityInUseBits), NULL);
 	// This is only temporary. Once I have converted all the ent->inuse refs,
 	// it won;t be needed -MW.
 	for(int i=0;i<MAX_GENTITIES;i++)
@@ -190,8 +192,6 @@ static void G_DynamicMusicUpdate( void )
 	int			danger = 0;
 	int			battle = 0;
 	int			entTeam;
-	qboolean	dangerNear = qfalse;
-	qboolean	suspicious = qfalse;
 	qboolean	LOScalced = qfalse, clearLOS = qfalse;
 
 	//FIXME: intro and/or other cues? (one-shot music sounds)
@@ -205,8 +205,8 @@ static void G_DynamicMusicUpdate( void )
 		return;
 	}
 
-	if ( !player->client 
-		|| player->client->pers.teamState.state != TEAM_ACTIVE 
+	if ( !player->client
+		|| player->client->pers.teamState.state != TEAM_ACTIVE
 		|| level.time - player->client->pers.enterTime < 100 )
 	{//player hasn't spawned yet
 		return;
@@ -252,14 +252,14 @@ static void G_DynamicMusicUpdate( void )
 
 	//enemy-based
 	VectorCopy( player->currentOrigin, center );
-	for ( i = 0 ; i < 3 ; i++ ) 
+	for ( i = 0 ; i < 3 ; i++ )
 	{
 		mins[i] = center[i] - radius;
 		maxs[i] = center[i] + radius;
 	}
-	
+
 	numListedEntities = gi.EntitiesInBox( mins, maxs, entityList, MAX_GENTITIES );
-	for ( e = 0 ; e < numListedEntities ; e++ ) 
+	for ( e = 0 ; e < numListedEntities ; e++ )
 	{
 		ent = entityList[ e ];
 		if ( !ent || !ent->inuse )
@@ -356,7 +356,7 @@ static void G_DynamicMusicUpdate( void )
 			{
 				clearLOS = G_ClearLOS( player, player->client->renderInfo.eyePoint, ent );
 			}
-			if ( !clearLOS ) 
+			if ( !clearLOS )
 			{//can't see them directly
 				continue;
 			}
@@ -389,13 +389,15 @@ static void G_DynamicMusicUpdate( void )
 				switch ( level.alertEvents[alert].level )
 				{
 				case AEL_DISCOVERED:
-					dangerNear = qtrue;
+					//dangerNear = qtrue;
 					break;
 				case AEL_SUSPICIOUS:
-					suspicious = qtrue;
+					//suspicious = qtrue;
 					break;
 				case AEL_MINOR:
 					//distraction = qtrue;
+					break;
+				default:
 					break;
 				}
 			}
@@ -419,7 +421,7 @@ static void G_DynamicMusicUpdate( void )
 			//level.dmDebounceTime = level.time + 3000 + 1000*battle;
 		}
 	}
-	else 
+	else
 	{
 		if ( level.dmDebounceTime > level.time )
 		{//not ready to switch yet
@@ -504,7 +506,7 @@ void G_FindTeams( void ) {
 //				continue;
 			if(!PInUse(j))
 				continue;
-			
+
 			e2=&g_entities[j];
 			if (!e2->team)
 				continue;
@@ -551,9 +553,9 @@ void G_InitCvars( void ) {
 
 	// change anytime vars
 	g_speed = gi.cvar( "g_speed", "250", CVAR_CHEAT );
-	g_gravity = gi.cvar( "g_gravity", "800", CVAR_USERINFO|CVAR_ROM );	//using userinfo as savegame flag
-	g_sex = gi.cvar ("sex", "male", CVAR_USERINFO | CVAR_ARCHIVE );
-	g_spskill = gi.cvar ("g_spskill", "0", CVAR_ARCHIVE | CVAR_USERINFO);	//using userinfo as savegame flag
+	g_gravity = gi.cvar( "g_gravity", "800", CVAR_SAVEGAME|CVAR_ROM );
+	g_sex = gi.cvar ("sex", "male", CVAR_USERINFO | CVAR_ARCHIVE|CVAR_SAVEGAME|CVAR_NORESTART );
+	g_spskill = gi.cvar ("g_spskill", "0", CVAR_ARCHIVE | CVAR_SAVEGAME|CVAR_NORESTART);
 	g_knockback = gi.cvar( "g_knockback", "1000", CVAR_CHEAT );
 	g_dismemberment = gi.cvar ( "g_dismemberment", "3", CVAR_ARCHIVE );//0 = none, 1 = arms and hands, 2 = legs, 3 = waist and head, 4 = mega dismemberment
 	g_dismemberProbabilities = gi.cvar ( "g_dismemberProbabilities", "1", CVAR_ARCHIVE );//0 = ignore probabilities, 1 = use probabilities
@@ -576,7 +578,7 @@ void G_InitCvars( void ) {
 
 	g_AIsurrender = gi.cvar( "g_AIsurrender", "0", CVAR_CHEAT );
 	g_numEntities = gi.cvar( "g_numEntities", "0", CVAR_CHEAT );
-	
+
 	gi.cvar( "newTotalSecrets", "0", CVAR_ROM );
 	gi.cvar_set("newTotalSecrets", "0");//used to carry over the count from SP_target_secret to ClientBegin
 	g_iscensored = gi.cvar( "ui_iscensored", "0", CVAR_ARCHIVE|CVAR_ROM|CVAR_INIT|CVAR_CHEAT|CVAR_NORESTART );
@@ -592,7 +594,7 @@ InitGame
 // I'm just declaring a global here which I need to get at in NAV_GenerateSquadPaths for deciding if pre-calc'd
 //	data is valid, and this saves changing the proto of G_SpawnEntitiesFromString() to include a checksum param which
 //	may get changed anyway if a new nav system is ever used. This way saves messing with g_local.h each time -slc
-int giMapChecksum;	
+int giMapChecksum;
 SavedGameJustLoaded_e g_eSavedGameJustLoaded;
 qboolean g_qbLoadTransition = qfalse;
 #ifndef FINAL_BUILD
@@ -638,6 +640,7 @@ void InitGame(  const char *mapname, const char *spawntarget, int checkSum, cons
 	// initialize all clients for this game
 	level.maxclients = 1;
 	level.clients = (struct gclient_s *) G_Alloc( level.maxclients * sizeof(level.clients[0]) );
+	memset(level.clients, 0, level.maxclients * sizeof(level.clients[0]));
 
 	// set client fields on player
 	g_entities[0].client = level.clients;
@@ -649,7 +652,7 @@ void InitGame(  const char *mapname, const char *spawntarget, int checkSum, cons
 
 	//Set up NPC init data
 	NPC_InitGame();
-	
+
 	TIMER_Clear();
 
 	//
@@ -689,7 +692,7 @@ void InitGame(  const char *mapname, const char *spawntarget, int checkSum, cons
 	}
 	else
 	{//loaded
-		//FIXME: if this is from a loadgame, it needs to be sure to write this 
+		//FIXME: if this is from a loadgame, it needs to be sure to write this
 		//out whenever you do a savegame since the edges and routes are dynamic...
 		//OR: always do a navigator.CheckBlockedEdges() on map startup after nav-load/calc-paths
 		navigator.pathsCalculated = qtrue;//just to be safe?  Does this get saved out?  No... assumed
@@ -765,7 +768,7 @@ and global variables
 =================
 */
 extern int PM_ValidateAnimRange( int startFrame, int endFrame, float animSpeed );
-extern "C" Q_EXPORT game_export_t *GetGameAPI( game_import_t *import ) {
+extern "C" Q_EXPORT game_export_t* QDECL GetGameAPI( game_import_t *import ) {
 	gameinfo_import_t	gameinfo_import;
 
 	gi = *import;
@@ -811,14 +814,11 @@ void QDECL G_Error( const char *fmt, ... ) {
 	char		text[1024];
 
 	va_start (argptr, fmt);
-	vsprintf (text, fmt, argptr);
+	Q_vsnprintf (text, sizeof(text), fmt, argptr);
 	va_end (argptr);
 
 	gi.Error( ERR_DROP, "%s", text);
 }
-
-#ifndef GAME_HARD_LINKED
-// this is only here so the functions in q_shared.c and bg_*.c can link
 
 /*
 -------------------------
@@ -831,7 +831,7 @@ void Com_Error ( int level, const char *error, ... ) {
 	char		text[1024];
 
 	va_start (argptr, error);
-	vsprintf (text, error, argptr);
+	Q_vsnprintf (text, sizeof(text), error, argptr);
 	va_end (argptr);
 
 	gi.Error( level, "%s", text);
@@ -848,13 +848,11 @@ void Com_Printf( const char *msg, ... ) {
 	char		text[1024];
 
 	va_start (argptr, msg);
-	vsprintf (text, msg, argptr);
+	Q_vsnprintf (text, sizeof(text), msg, argptr);
 	va_end (argptr);
 
 	gi.Printf ("%s", text);
 }
-
-#endif
 
 /*
 ========================================================================
@@ -873,7 +871,7 @@ FUNCTIONS CALLED EVERY FRAME
 ========================================================================
 */
 
-void G_CheckTasksCompleted (gentity_t *ent) 
+static void G_CheckTasksCompleted (gentity_t *ent)
 {
 	if ( Q3_TaskIDPending( ent, TID_CHAN_VOICE ) )
 	{
@@ -896,7 +894,7 @@ void G_CheckTasksCompleted (gentity_t *ent)
 	}
 }
 
-void G_CheckSpecialPersistentEvents( gentity_t *ent )
+static void G_CheckSpecialPersistentEvents( gentity_t *ent )
 {//special-case alerts that would be a pain in the ass to have the ent's think funcs generate
 	if ( ent == NULL )
 	{
@@ -944,7 +942,7 @@ G_RunThink
 Runs thinking code for this frame if necessary
 =============
 */
-void G_RunThink (gentity_t *ent) 
+void G_RunThink (gentity_t *ent)
 {
 	float	thinktime;
 
@@ -959,16 +957,16 @@ void G_RunThink (gentity_t *ent)
 	*/
 
 	thinktime = ent->nextthink;
-	if ( thinktime <= 0 ) 
+	if ( thinktime <= 0 )
 	{
 		goto runicarus;
 	}
-	
-	if ( thinktime > level.time ) 
+
+	if ( thinktime > level.time )
 	{
 		goto runicarus;
 	}
-	
+
 	ent->nextthink = 0;
 	if ( ent->e_ThinkFunc == thinkF_NULL )	// actually you don't need this if I check for it in the next function -slc
 	{
@@ -1014,7 +1012,7 @@ void G_Animate ( gentity_t *self )
 				int junk;
 
 				// I guess query ghoul2 to find out what the current frame is and see if we are done.
-				gi.G2API_GetBoneAnimIndex( &self->ghoul2[self->playerModel], self->rootBone, 
+				gi.G2API_GetBoneAnimIndex( &self->ghoul2[self->playerModel], self->rootBone,
 									(cg.time?cg.time:level.time), &frame, &junk, &junk, &junk, &junk2, NULL );
 
 				// It NEVER seems to get to what you'd think the last frame would be, so I'm doing this to try and catch when the animation has stopped
@@ -1048,8 +1046,8 @@ void G_Animate ( gentity_t *self )
 	if ( self->ghoul2.size())
 	{
 		self->s.frame = self->endFrame;
-		
-		gi.G2API_SetBoneAnimIndex( &self->ghoul2[self->playerModel], self->rootBone, 
+
+		gi.G2API_SetBoneAnimIndex( &self->ghoul2[self->playerModel], self->rootBone,
 									self->startFrame, self->endFrame, BONE_ANIM_OVERRIDE_FREEZE, 1.0f, cg.time, -1, -1 );
 		return;
 	}
@@ -1201,7 +1199,7 @@ void G_CheckEndLevelTimers( gentity_t *ent )
 }
 
 void NAV_CheckCalcPaths( void )
-{	
+{
 	if ( navCalcPathTime && navCalcPathTime < level.time )
 	{//first time we've ever loaded this map...
 		//clear all the failed edges
@@ -1209,7 +1207,7 @@ void NAV_CheckCalcPaths( void )
 
 		//Calculate all paths
 		NAV_CalculatePaths( level.mapname, giMapChecksum );
-		
+
 		navigator.CalculatePaths();
 
 #ifndef FINAL_BUILD
@@ -1217,7 +1215,7 @@ void NAV_CheckCalcPaths( void )
 		{
 			gi.Printf( S_COLOR_RED"Not saving .nav file due to fatal nav errors\n" );
 		}
-		else 
+		else
 #endif
 		if ( navigator.Save( level.mapname, giMapChecksum ) == qfalse )
 		{
@@ -1244,21 +1242,20 @@ extern int delayedShutDown;
 void G_RunFrame( int levelTime ) {
 	int			i;
 	gentity_t	*ent;
-	int			msec;
 	int			ents_inuse=0; // someone's gonna be pissed I put this here...
 #if	AI_TIMERS
 	AITime = 0;
 	navTime = 0;
 #endif//	AI_TIMERS
-	
+
 	level.framenum++;
 	level.previousTime = level.time;
 	level.time = levelTime;
-	msec = level.time - level.previousTime;
-	
+	//msec = level.time - level.previousTime;
+
 	NAV_CheckCalcPaths();
 	//ResetTeamCounters();
-	
+
 	AI_UpdateGroups();
 
 	if ( d_altRoutes->integer )
@@ -1268,18 +1265,18 @@ void G_RunFrame( int levelTime ) {
 	navigator.ClearCheckedNodes();
 
 	//remember last waypoint, clear current one
-//	for ( i = 0, ent = &g_entities[0]; i < globals.num_entities ; i++, ent++) 
-	for ( i = 0; i < globals.num_entities ; i++) 
+//	for ( i = 0, ent = &g_entities[0]; i < globals.num_entities ; i++, ent++)
+	for ( i = 0; i < globals.num_entities ; i++)
 	{
 //		if ( !ent->inuse )
 //			continue;
 
 		if(!PInUse(i))
 			continue;
-		
+
 		ent = &g_entities[i];
-	
-		if ( ent->waypoint != WAYPOINT_NONE 
+
+		if ( ent->waypoint != WAYPOINT_NONE
 			&& ent->noWaypointTime < level.time )
 		{
 			ent->lastWaypoint = ent->waypoint;
@@ -1296,7 +1293,7 @@ void G_RunFrame( int levelTime ) {
 
 	//Run the frame for all entities
 //	for ( i = 0, ent = &g_entities[0]; i < globals.num_entities ; i++, ent++)
-	for ( i = 0; i < globals.num_entities ; i++) 
+	for ( i = 0; i < globals.num_entities ; i++)
 	{
 //		if ( !ent->inuse )
 //			continue;
@@ -1350,19 +1347,19 @@ void G_RunFrame( int levelTime ) {
 		}
 		G_CheckSpecialPersistentEvents( ent );
 
-		if ( ent->s.eType == ET_MISSILE ) 
+		if ( ent->s.eType == ET_MISSILE )
 		{
 			G_RunMissile( ent );
 			continue;
 		}
 
-		if ( ent->s.eType == ET_ITEM ) 
+		if ( ent->s.eType == ET_ITEM )
 		{
 			G_RunItem( ent );
 			continue;
 		}
 
-		if ( ent->s.eType == ET_MOVER ) 
+		if ( ent->s.eType == ET_MOVER )
 		{
 			if ( ent->model && Q_stricmp( "models/test/mikeg/tie_fighter.md3", ent->model ) == 0 )
 			{
@@ -1373,7 +1370,7 @@ void G_RunFrame( int levelTime ) {
 		}
 
 		//The player
-		if ( i == 0 ) 
+		if ( i == 0 )
 		{
 			// decay batteries if the goggles are active
 			if ( cg.zoomMode == 1 && ent->client->ps.batteryCharge > 0 )
@@ -1417,7 +1414,7 @@ void G_RunFrame( int levelTime ) {
 
 	// perform final fixups on the player
 	ent = &g_entities[0];
-	if ( ent->inuse ) 
+	if ( ent->inuse )
 	{
 		ClientEndFrame( ent );
 	}
@@ -1462,7 +1459,7 @@ void G_RunFrame( int levelTime ) {
 #ifndef FINAL_BUILD
 	if ( delayedShutDown != 0 && delayedShutDown < level.time )
 	{
-		G_Error( "Game Errors. Scroll up the console to read them.\n" );
+		G_Error( "Game Errors. Scroll up the console to read them." );
 	}
 #endif
 
@@ -1479,15 +1476,15 @@ void G_RunFrame( int levelTime ) {
 extern qboolean player_locked;
 
 void G_LoadSave_WriteMiscData(void)
-{ 
-	gi.AppendToSaveGame('LCKD', &player_locked, sizeof(player_locked));
+{
+	gi.AppendToSaveGame(INT_ID('L','C','K','D'), &player_locked, sizeof(player_locked));
 }
 
 
 
 void G_LoadSave_ReadMiscData(void)
 {
-	gi.ReadFromSaveGame('LCKD', &player_locked, sizeof(player_locked), NULL);
+	gi.ReadFromSaveGame(INT_ID('L','C','K','D'), &player_locked, sizeof(player_locked), NULL);
 }
 
 

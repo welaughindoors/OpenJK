@@ -1,20 +1,24 @@
 /*
-This file is part of Jedi Knight 2.
+===========================================================================
+Copyright (C) 2000 - 2013, Raven Software, Inc.
+Copyright (C) 2001 - 2013, Activision, Inc.
+Copyright (C) 2013 - 2015, OpenJK contributors
 
-    Jedi Knight 2 is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+This file is part of the OpenJK source code.
 
-    Jedi Knight 2 is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+OpenJK is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 as
+published by the Free Software Foundation.
 
-    You should have received a copy of the GNU General Public License
-    along with Jedi Knight 2.  If not, see <http://www.gnu.org/licenses/>.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, see <http://www.gnu.org/licenses/>.
+===========================================================================
 */
-// Copyright 2001-2013 Raven Software
 
 // ICARUS Instance
 //
@@ -61,7 +65,9 @@ ICARUS_Instance *ICARUS_Instance::Create( interface_export_t *ie )
 	ICARUS_Instance *instance = new ICARUS_Instance;
 	instance->m_interface = ie;
 
-	//OutputDebugString( "ICARUS Instance successfully created\n" );
+#ifdef _DEBUG
+	Com_Printf( "ICARUS Instance successfully created\n" );
+#endif
 
 	return instance;
 }
@@ -123,32 +129,15 @@ int ICARUS_Instance::Delete( void )
 
 	Free();
 
-#if 0
-	
-	char	buffer[1024];
-
-	OutputDebugString( "\nICARUS Instance Debug Info:\n---------------------------\n" );
-
-	sprintf( (char *) buffer, "Sequencers Allocated:\t%d\n", m_DEBUG_NumSequencerAlloc );
-	OutputDebugString( (const char *) &buffer );
-
-	sprintf( (char *) buffer, "Sequencers Freed:\t\t%d\n", m_DEBUG_NumSequencerFreed );
-	OutputDebugString( (const char *) &buffer );
-
-	sprintf( (char *) buffer, "Sequencers Residual:\t%d\n\n", m_DEBUG_NumSequencerResidual );
-	OutputDebugString( (const char *) &buffer );
-
-	sprintf( (char *) buffer, "Sequences Allocated:\t%d\n", m_DEBUG_NumSequenceAlloc );
-	OutputDebugString( (const char *) &buffer );
-
-	sprintf( (char *) buffer, "Sequences Freed:\t\t%d\n", m_DEBUG_NumSequenceFreed );
-	OutputDebugString( (const char *) &buffer );
-
-	sprintf( (char *) buffer, "Sequences Residual:\t\t%d\n\n", m_DEBUG_NumSequenceResidual );
-	OutputDebugString( (const char *) &buffer );
-
-	OutputDebugString( "\n" );
-
+#ifdef _DEBUG
+	Com_Printf( "\nICARUS Instance Debug Info:\n---------------------------\n" );
+	Com_Printf( "Sequencers Allocated:\t%d\n", m_DEBUG_NumSequencerAlloc );
+	Com_Printf( "Sequencers Freed:\t\t%d\n", m_DEBUG_NumSequencerFreed );
+	Com_Printf( "Sequencers Residual:\t%d\n\n", m_DEBUG_NumSequencerResidual );
+	Com_Printf( "Sequences Allocated:\t%d\n", m_DEBUG_NumSequenceAlloc );
+	Com_Printf( "Sequences Freed:\t\t%d\n", m_DEBUG_NumSequenceFreed );
+	Com_Printf( "Sequences Residual:\t\t%d\n\n", m_DEBUG_NumSequenceResidual );
+	Com_Printf( "\n" );
 #endif
 
 	delete this;
@@ -313,7 +302,7 @@ int ICARUS_Instance::SaveSequenceIDTable( void )
 {
 	//Save out the number of sequences to follow
 	int		numSequences = m_sequences.size();
-	m_interface->I_WriteSaveData( '#SEQ', &numSequences, sizeof( numSequences ) );
+	m_interface->I_WriteSaveData( INT_ID('#','S','E','Q'), &numSequences, sizeof( numSequences ) );
 
 	//Sequences are saved first, by ID and information
 	sequence_l::iterator	sqi;
@@ -330,7 +319,7 @@ int ICARUS_Instance::SaveSequenceIDTable( void )
 		idTable[itr++] = (*sqi)->GetID();
 	}
 
-	m_interface->I_WriteSaveData( 'SQTB', idTable, sizeof( int ) * numSequences );
+	m_interface->I_WriteSaveData( INT_ID('S','Q','T','B'), idTable, sizeof( int ) * numSequences );
 
 	delete[] idTable;
 
@@ -368,7 +357,7 @@ int ICARUS_Instance::SaveSequencers( void )
 {
 	//Save out the number of sequences to follow
 	int		numSequencers = m_sequencers.size();
-	m_interface->I_WriteSaveData( '#SQR', &numSequencers, sizeof( numSequencers ) );
+	m_interface->I_WriteSaveData( INT_ID('#','S','Q','R'), &numSequencers, sizeof( numSequencers ) );
 
 	//The sequencers are then saved
 	sequencer_l::iterator	si;
@@ -390,24 +379,24 @@ int ICARUS_Instance::SaveSignals( void )
 {
 	int	numSignals = m_signals.size();
 
-	m_interface->I_WriteSaveData( 'ISIG', &numSignals, sizeof( numSignals ) );
+	m_interface->I_WriteSaveData( INT_ID('I','S','I','G'), &numSignals, sizeof( numSignals ) );
 
 	signal_m::iterator	si;
 	STL_ITERATE( si, m_signals )
 	{
-		//m_interface->I_WriteSaveData( 'ISIG', &numSignals, sizeof( numSignals ) );
+		//m_interface->I_WriteSaveData( INT_ID('I','S','I','G'), &numSignals, sizeof( numSignals ) );
 		const char *name = ((*si).first).c_str();
 		
 		//Make sure this is a valid string
-		assert( ( name != NULL ) && ( name[0] != NULL ) );
+		assert( ( name != NULL ) && ( name[0] != '\0' ) );
 
 		int length = strlen( name ) + 1;
 
 		//Save out the string size
-		m_interface->I_WriteSaveData( 'SIG#', &length, sizeof ( length ) );
+		m_interface->I_WriteSaveData( INT_ID('S','I','G','#'), &length, sizeof ( length ) );
 
 		//Write out the string
-		m_interface->I_WriteSaveData( 'SIGN', (void *) name, length );
+		m_interface->I_WriteSaveData( INT_ID('S','I','G','N'), (void *) name, length );
 	}
 
 	return true;
@@ -423,7 +412,7 @@ int ICARUS_Instance::Save( void )
 {	
 	//Save out a ICARUS save block header with the ICARUS version
 	double	version = ICARUS_VERSION;
-	m_interface->I_WriteSaveData( 'ICAR', &version, sizeof( version ) );
+	m_interface->I_WriteSaveData( INT_ID('I','C','A','R'), &version, sizeof( version ) );
 
 	//Save out the signals
 	if ( SaveSignals() == false )
@@ -437,7 +426,7 @@ int ICARUS_Instance::Save( void )
 	if ( SaveSequencers() == false )
 		return false;
 
-	m_interface->I_WriteSaveData( 'IEND', &version, sizeof( version ) );
+	m_interface->I_WriteSaveData( INT_ID('I','E','N','D'), &version, sizeof( version ) );
 
 	return true;
 }
@@ -452,7 +441,7 @@ int ICARUS_Instance::LoadSignals( void )
 {
 	int numSignals;
 
-	m_interface->I_ReadSaveData( 'ISIG', &numSignals, sizeof( numSignals ), NULL );
+	m_interface->I_ReadSaveData( INT_ID('I','S','I','G'), &numSignals, sizeof( numSignals ), NULL );
 
 	for ( int i = 0; i < numSignals; i++ )
 	{
@@ -460,12 +449,12 @@ int ICARUS_Instance::LoadSignals( void )
 		int		length;
 
 		//Get the size of the string
-		m_interface->I_ReadSaveData( 'SIG#', &length, sizeof( length ), NULL );
+		m_interface->I_ReadSaveData( INT_ID('S','I','G','#'), &length, sizeof( length ), NULL );
 
-		assert( length < sizeof( buffer ) );
+		assert( length < (int)sizeof( buffer ) );
 
 		//Get the string
-		m_interface->I_ReadSaveData( 'SIGN', &buffer, length, NULL );
+		m_interface->I_ReadSaveData( INT_ID('S','I','G','N'), &buffer, length, NULL );
 
 		//Turn it on and add it to the system
 		Signal( (const char *) &buffer );
@@ -506,7 +495,7 @@ int ICARUS_Instance::LoadSequences( void )
 	int			numSequences;
 
 	//Get the number of sequences to read in
-	m_interface->I_ReadSaveData( '#SEQ', &numSequences, sizeof( numSequences ), NULL );
+	m_interface->I_ReadSaveData( INT_ID('#','S','E','Q'), &numSequences, sizeof( numSequences ), NULL );
 
 	int	*idTable = new int[ numSequences ];
 
@@ -514,7 +503,7 @@ int ICARUS_Instance::LoadSequences( void )
 		return false;
 
 	//Load the sequencer ID table
-	m_interface->I_ReadSaveData( 'SQTB', idTable, sizeof( int ) * numSequences, NULL );
+	m_interface->I_ReadSaveData( INT_ID('S','Q','T','B'), idTable, sizeof( int ) * numSequences, NULL );
 
 	//First pass, allocate all container sequences and give them their proper IDs
 	if ( AllocateSequences( numSequences, idTable ) == false )
@@ -550,7 +539,7 @@ int ICARUS_Instance::LoadSequencers( void )
 	int			numSequencers;
 
 	//Get the number of sequencers to load
-	m_interface->I_ReadSaveData( '#SQR', &numSequencers, sizeof( &numSequencers ), NULL );
+	m_interface->I_ReadSaveData( INT_ID('#','S','Q','R'), &numSequencers, sizeof( numSequencers ), NULL );
 	
 	//Load all sequencers
 	for ( int i = 0; i < numSequencers; i++ )
@@ -579,7 +568,7 @@ int ICARUS_Instance::Load( void )
 
 	//Check to make sure we're at the ICARUS save block
 	double	version;
-	m_interface->I_ReadSaveData( 'ICAR', &version, sizeof( version ), NULL );
+	m_interface->I_ReadSaveData( INT_ID('I','C','A','R'), &version, sizeof( version ), NULL );
 
 	//Versions must match!
 	if ( version != ICARUS_VERSION )
@@ -609,7 +598,7 @@ int ICARUS_Instance::Load( void )
 		return false;
 	}
 
-	m_interface->I_ReadSaveData( 'IEND', &version, sizeof( version ), NULL );
+	m_interface->I_ReadSaveData( INT_ID('I','E','N','D'), &version, sizeof( version ), NULL );
 
 	return true;
 }

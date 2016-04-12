@@ -1,24 +1,26 @@
 /*
-This file is part of Jedi Knight 2.
+===========================================================================
+Copyright (C) 2000 - 2013, Raven Software, Inc.
+Copyright (C) 2001 - 2013, Activision, Inc.
+Copyright (C) 2013 - 2015, OpenJK contributors
 
-    Jedi Knight 2 is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+This file is part of the OpenJK source code.
 
-    Jedi Knight 2 is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+OpenJK is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 as
+published by the Free Software Foundation.
 
-    You should have received a copy of the GNU General Public License
-    along with Jedi Knight 2.  If not, see <http://www.gnu.org/licenses/>.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, see <http://www.gnu.org/licenses/>.
+===========================================================================
 */
-// Copyright 2001-2013 Raven Software
 
-// leave this line at the top for all g_xxxx.cpp files...
 #include "g_headers.h"
-
 
 #include "g_local.h"
 #include "g_functions.h"
@@ -41,6 +43,8 @@ static void CacheChunkEffects( material_t material )
 {
 	switch( material )
 	{
+	default:
+		break;
 	case MAT_GLASS:
 		G_EffectIndex( "chunks/glassbreak" );
 		break;
@@ -418,12 +422,12 @@ void SP_func_breakable( gentity_t *self )
 		self->noDamageTeam = TranslateTeamName( self->team );
 		if(self->noDamageTeam == TEAM_FREE)
 		{
-			G_Error("team name %s not recognized\n", self->team);
+			G_Error("team name %s not recognized", self->team);
 		}
 	}
 	self->team = NULL;
 	if (!self->model) {
-		G_Error("func_breakable with NULL model\n");
+		G_Error("func_breakable with NULL model");
 	}
 	InitBBrush( self );
 }
@@ -619,7 +623,7 @@ void misc_model_breakable_init( gentity_t *ent )
 	type = MDL_OTHER;
 
 	if (!ent->model) {
-		G_Error("no model set on %s at (%.1f %.1f %.1f)\n", ent->classname, ent->s.origin[0],ent->s.origin[1],ent->s.origin[2]);
+		G_Error("no model set on %s at (%.1f %.1f %.1f)", ent->classname, ent->s.origin[0],ent->s.origin[1],ent->s.origin[2]);
 	}
 	//Main model
 	ent->s.modelindex = ent->sound2to1 = G_ModelIndex( ent->model );
@@ -947,7 +951,7 @@ void SP_misc_model_breakable( gentity_t *ent )
 		ent->noDamageTeam = TranslateTeamName( ent->team );
 		if ( ent->noDamageTeam == TEAM_FREE )
 		{
-			G_Error("team name %s not recognized\n", ent->team);
+			G_Error("team name %s not recognized", ent->team);
 		}
 	}
 	

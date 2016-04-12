@@ -1,4 +1,26 @@
-// These utilities are meant for strictly non-player, non-team NPCs.  
+/*
+===========================================================================
+Copyright (C) 2000 - 2013, Raven Software, Inc.
+Copyright (C) 2001 - 2013, Activision, Inc.
+Copyright (C) 2013 - 2015, OpenJK contributors
+
+This file is part of the OpenJK source code.
+
+OpenJK is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License version 2 as
+published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, see <http://www.gnu.org/licenses/>.
+===========================================================================
+*/
+
+// These utilities are meant for strictly non-player, non-team NPCs.
 // These functions are in their own file because they are only intended
 // for use with NPCs who's logic has been overriden from the original
 // AI code, and who's code resides in files with the AI_ prefix.
@@ -82,7 +104,7 @@ int AI_ClosestGroupEntityNumToPoint( AIGroupInfo_t *group, vec3_t point )
 	int	cost, bestCost = Q3_INFINITE;
 	int	closest = ENTITYNUM_NONE;
 	int i;
-	
+
 	if ( group == NULL || group->numGroup <= 0 )
 	{
 		return ENTITYNUM_NONE;
@@ -260,9 +282,9 @@ qboolean AI_TryJoinPreviousGroup( gentity_t *self )
 	int	i;
 	for ( i = 0; i < MAX_FRAME_GROUPS; i++ )
 	{
-		if ( level.groups[i].numGroup 
-			&& level.groups[i].numGroup < (MAX_GROUP_MEMBERS - 1) 
-			//&& level.groups[i].enemy != NULL 
+		if ( level.groups[i].numGroup
+			&& level.groups[i].numGroup < (MAX_GROUP_MEMBERS - 1)
+			//&& level.groups[i].enemy != NULL
 			&& level.groups[i].enemy == self->enemy )
 		{//has members, not full and has my enemy
 			if ( AI_ValidateGroupMember( &level.groups[i], self ) )
@@ -288,7 +310,7 @@ qboolean AI_GetNextEmptyGroup( gentity_t *self )
 	{//try to just put us in one that already exists
 		return qfalse;
 	}
-	
+
 	//okay, make a whole new one, then
 	for ( i = 0; i < MAX_FRAME_GROUPS; i++ )
 	{
@@ -385,7 +407,7 @@ qboolean AI_ValidateGroupMember( AIGroupInfo_t *group, gentity_t *member )
 		member->client->ps.weapon == WP_EMPLACED_GUN ||
 //		member->client->ps.weapon == WP_BOT_LASER ||		// Probe droid	- Laser blast
 		member->client->ps.weapon == WP_STUN_BATON ||
-		member->client->ps.weapon == WP_TURRET /*||			// turret guns 
+		member->client->ps.weapon == WP_TURRET /*||			// turret guns
 		member->client->ps.weapon == WP_ATST_MAIN ||
 		member->client->ps.weapon == WP_ATST_SIDE ||
 		member->client->ps.weapon == WP_TIE_FIGHTER*/ )
@@ -509,7 +531,7 @@ void AI_GetGroup( gentity_t *self )
 		{//FIXME: keep track of those who aren't angry yet and see if we should wake them after we assemble the core group
 			continue;
 		}
-		
+
 		//store it
 		AI_InsertGroupMember( self->NPC->group, member );
 
@@ -526,7 +548,7 @@ void AI_GetGroup( gentity_t *self )
 	for ( i = 0; i < numWaiters; i++ )
 	{
 		waiter = &g_entities[waiters[i]];
-	
+
 		for ( j = 0; j < self->NPC->group->numGroup; j++ )
 		{
 			member = &g_entities[self->NPC->group->member[j];
@@ -741,7 +763,7 @@ qboolean AI_RefreshGroup( AIGroupInfo_t *group )
 	int			i;//, j;
 
 	//see if we should merge with another group
-	for ( i = 0; i < MAX_FRAME_GROUPS; i++ ) 
+	for ( i = 0; i < MAX_FRAME_GROUPS; i++ )
 	{
 		if ( &level.groups[i] == group )
 		{
@@ -968,9 +990,9 @@ void AI_UpdateGroups( void )
 		return;
 	}
 	//Clear all Groups
-	for ( i = 0; i < MAX_FRAME_GROUPS; i++ ) 
+	for ( i = 0; i < MAX_FRAME_GROUPS; i++ )
 	{
-		if ( !level.groups[i].numGroup || AI_RefreshGroup( &level.groups[i] ) == qfalse )//level.groups[i].enemy == NULL || 
+		if ( !level.groups[i].numGroup || AI_RefreshGroup( &level.groups[i] ) == qfalse )//level.groups[i].enemy == NULL ||
 		{
 			memset( &level.groups[i], 0, sizeof( level.groups[i] ) );
 		}
@@ -994,7 +1016,7 @@ qboolean AI_GroupContainsEntNum( AIGroupInfo_t *group, int entNum )
 	}
 	return qfalse;
 }
-//Overload 
+//Overload
 
 /*
 void AI_GetGroup( AIGroupInfo_t &group, gentity_t *ent, int radius )
